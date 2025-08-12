@@ -31,10 +31,12 @@ replay_pid*
 *.pid
 
 # env
-.env
+.env*
 application-*.yml
 application-*.properties
 
 # etc
 bin/
 tmp/
+/init-sql-dev/
+/mysql-conf.d/
