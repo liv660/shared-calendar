@@ -1,0 +1,40 @@
+# Java
+*.class
+*.jar
+*.war
+*.ear
+
+# Gradle
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+**/build/
+**/out/
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# VS Code
+.vscode/
+
+# Mac OS
+.DS_Store
+
+# logs
+*.log
+hs_err_pid*
+replay_pid*
+
+# Spring Boot
+*.pid
+
+# env
+.env
+application-*.yml
+application-*.properties
+
+# etc
+bin/
+tmp/
