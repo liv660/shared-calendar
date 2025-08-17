@@ -1,0 +1,1 @@
+ext["springdocVersion"] = "2.8.0"
