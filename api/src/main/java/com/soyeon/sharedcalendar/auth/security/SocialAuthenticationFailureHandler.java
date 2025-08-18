@@ -15,6 +15,7 @@ public class SocialAuthenticationFailureHandler implements AuthenticationFailure
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json;charset=UTF-8");
+        //TODO
         response.getWriter().write("""
                 {"error":"unauthorized", "message":"%s"};"
                 """.formatted(exception.getMessage()));

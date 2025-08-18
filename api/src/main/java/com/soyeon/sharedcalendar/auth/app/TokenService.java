@@ -1,14 +1,14 @@
 package com.soyeon.sharedcalendar.auth.app;
 
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JOSEObjectType;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.soyeon.sharedcalendar.auth.config.JwtProperties;
 import com.soyeon.sharedcalendar.auth.domain.MemberPrincipal;
+import com.soyeon.sharedcalendar.auth.dto.TokenResponse;
+import com.soyeon.sharedcalendar.member.domain.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +16,7 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.ParseException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
@@ -27,24 +28,24 @@ import java.util.UUID;
 public class TokenService {
     private final JwtProperties props;
     private final SecretKey hs256SecretKey;
+    private final MemberRepository memberRepository;
 
-    public Tokens issueToken(MemberPrincipal principal) {
+    /**
+     * 최초 accessToken, refreshToken을 발급한다.
+     * @param principal
+     * @return
+     */
+    public TokenResponse issueToken(MemberPrincipal principal) throws JOSEException {
         Instant now = Instant.now();
         String accessJti = UUID.randomUUID().toString();
         String refreshJti = UUID.randomUUID().toString();
 
         String access = signJwt(now, props.accessTtl(), principal, accessJti, "access");
         String refresh = signJwt(now, props.refreshTtl(), principal, refreshJti, "refresh");
-        return new Tokens(access, refresh);
+        return new TokenResponse(access, refresh, getAccessExpires());
     }
 
-    public record Tokens(String accessToken, String refreshToken) {}
-
-    public long getAccessExpires() {
-        return props.accessTtl().toSeconds();
-    }
-
-    private String signJwt(Instant now, Duration ttl, MemberPrincipal principal, String jti, String type) {
+    private String signJwt(Instant now, Duration ttl, MemberPrincipal principal, String jti, String type) throws JOSEException {
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .issuer(props.issuer())
                 .subject(String.valueOf(principal.memberId()))
@@ -62,14 +63,23 @@ public class TokenService {
                 .build();
 
         SignedJWT jwt = new SignedJWT(header, claims);
-        try {
-            jwt.sign(new MACSigner(hs256SecretKey.getEncoded()));
-            return jwt.serialize();
-        } catch (JOSEException e) {
-            throw new IllegalStateException("JWT signing failed",e);
-        }
+        jwt.sign(new MACSigner(hs256SecretKey.getEncoded()));
+        return jwt.serialize();
     }
 
+    /**
+     * 토큰 만료 시간을 초 단위로 반환한다.
+     * @return
+     */
+    private long getAccessExpires() {
+        return props.accessTtl().toSeconds();
+    }
+
+    /**
+     * refreshToken을 해시값으로 변환한다.
+     * @param refreshToken
+     * @return
+     */
     public String getHashedRefreshToken(String refreshToken) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -77,5 +87,29 @@ public class TokenService {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("Invalid algorithm", e);
         }
+    }
+
+    /**
+     * accessToken과 refreshToken을 재발급한다.
+     * @return
+     */
+    public TokenResponse reissueTokens(String refreshToken) throws ParseException, JOSEException {
+        SignedJWT jwt = SignedJWT.parse(refreshToken);
+        jwt.verify(new MACVerifier(hs256SecretKey));
+
+        String hash = getHashedRefreshToken(refreshToken);
+        long memberId = Long.parseLong(jwt.getJWTClaimsSet().getSubject());
+        boolean present = memberRepository.findById(memberId).filter(member -> member
+                .getRefreshToken().equals(hash)).isPresent();
+
+        if (present) {
+            MemberPrincipal principal = new MemberPrincipal(memberId,
+                    (String) jwt.getJWTClaimsSet().getClaim("email"),
+                    (String) jwt.getJWTClaimsSet().getClaim("name"));
+            TokenResponse newToken = issueToken(principal);
+            memberRepository.updateRefreshToken(memberId, hash);
+            return newToken;
+        }
+        return null;
     }
 }
