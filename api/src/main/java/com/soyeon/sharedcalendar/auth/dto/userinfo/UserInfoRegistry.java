@@ -26,6 +26,10 @@ public class UserInfoRegistry {
             props.getProviders().get(GOOGLE).getUserInfoUri(),
             GoogleUserInfo.class
         ));
+        map.put(KAKAO, new Meta(
+                props.getProviders().get(KAKAO).getUserInfoUri(),
+                KakaoUserInfo.class
+        ));
     }
 
     public Meta getMeta(SocialProvider provider) {

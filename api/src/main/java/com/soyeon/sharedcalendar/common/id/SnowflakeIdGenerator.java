@@ -9,7 +9,7 @@ public class SnowflakeIdGenerator implements IdGenerator {
     private static final long EPOCH = 1735689600000L; // 2025-01-01
     private static final long NODE_BITS = 10L;
     private static final long SEQUENCE_BITS = 12L;
-    private static final long MAX_SEQUENCE = 1L << SEQUENCE_BITS - 1;
+    private static final long MAX_SEQUENCE = ~(-1L << SEQUENCE_BITS);
 
     private final long nodeId;
     private long sequence = 0L;
@@ -29,13 +29,15 @@ public class SnowflakeIdGenerator implements IdGenerator {
         if (currentTimeMillis == lastTimestamp) {
             sequence = (sequence + 1) & MAX_SEQUENCE;
             if (sequence == 0L) {
-                while ((currentTimeMillis = System.currentTimeMillis()) <= lastTimestamp) {}
+                while (true) {
+                    if ((currentTimeMillis = System.currentTimeMillis()) > lastTimestamp) break;
+                }
             } else {
                 sequence = 0L;
             }
             lastTimestamp = currentTimeMillis;
         }
-        return ((currentTimeMillis - EPOCH) << (NODE_BITS +  SEQUENCE_BITS) )
+        return ((currentTimeMillis - EPOCH) << (NODE_BITS + SEQUENCE_BITS))
                 | (nodeId << SEQUENCE_BITS)
                 | sequence;
     }

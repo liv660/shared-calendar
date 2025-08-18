@@ -6,6 +6,7 @@ import com.soyeon.sharedcalendar.member.domain.repository.MemberRepository;
 import com.soyeon.sharedcalendar.member.dto.SignupRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -14,13 +15,17 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final SnowflakeIdGenerator idGenerator;
 
+    @Value("${member.default-profile-img}")
+    private String defaultProfileImgUrl;
+
     public Member signup(SignupRequest request) {
+        String profileImgUrl = request.profileImgUrl();
         Member member = Member.create(idGenerator.nextId(),
                 request.provider(),
                 request.providerUserId(),
                 request.email(),
                 request.name(),
-                request.profileImgUrl());
+                profileImgUrl == null ? defaultProfileImgUrl : profileImgUrl);
         memberRepository.save(member);
         return member;
     }

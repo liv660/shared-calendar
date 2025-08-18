@@ -50,7 +50,7 @@ public class TokenService {
                 .subject(String.valueOf(principal.memberId()))
                 .audience(props.audience())
                 .issueTime(Date.from(now))
-                .notBeforeTime(Date.from(now))
+                .notBeforeTime(Date.from(now.plusSeconds(30)))
                 .expirationTime(Date.from(now.plus(ttl)))
                 .jwtID(jti)
                 .claim("type", type)
