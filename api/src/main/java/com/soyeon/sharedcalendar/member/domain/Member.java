@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Getter
 public class Member {
     @Id
-    private long memberId;
+    private Long memberId;
     @Enumerated(EnumType.STRING)
     private SocialProvider provider;
     private String providerUserId;
@@ -27,7 +27,7 @@ public class Member {
     private LocalDateTime lastLoginAt;
     private LocalDateTime withdrawnAt;
 
-    public static Member create(long memberId, SocialProvider provider, String providerUserId, String email, String name, String profileImgUrl) {
+    public static Member create(Long memberId, SocialProvider provider, String providerUserId, String email, String name, String profileImgUrl) {
         Member m =  new Member();
         m.memberId = memberId;
         m.provider = provider;

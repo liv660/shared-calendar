@@ -15,9 +15,10 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final SnowflakeIdGenerator idGenerator;
 
-    @Value("${member.default-profile-img}")
+    @Value("${profile.default-member}")
     private String defaultProfileImgUrl;
 
+    @Transactional
     public Member signup(SignupRequest request) {
         String profileImgUrl = request.profileImgUrl();
         Member member = Member.create(idGenerator.nextId(),
@@ -31,7 +32,7 @@ public class MemberService {
     }
 
     @Transactional
-    public void updateRefreshToken(long memberId, String refreshToken) {
+    public void updateRefreshToken(Long memberId, String refreshToken) {
         memberRepository.updateRefreshToken(memberId, refreshToken);
     }
 }

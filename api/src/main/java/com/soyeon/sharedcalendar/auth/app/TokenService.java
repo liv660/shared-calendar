@@ -98,7 +98,7 @@ public class TokenService {
         jwt.verify(new MACVerifier(hs256SecretKey));
 
         String hash = getHashedRefreshToken(refreshToken);
-        long memberId = Long.parseLong(jwt.getJWTClaimsSet().getSubject());
+        Long memberId = Long.parseLong(jwt.getJWTClaimsSet().getSubject());
         boolean present = memberRepository.findById(memberId).filter(member -> member
                 .getRefreshToken().equals(hash)).isPresent();
 

@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,9 +31,8 @@ public class AuthController {
     public void callback() {}
 
     @Operation(summary = "JWT 재발급", description = "access token, refresh token을 재발급한다.")
-    @PostMapping(value = "/refresh", consumes = "application/json")
+    @PostMapping(value = "/refresh", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<TokenResponse> refreshToken(@Parameter(required = true) @Valid @RequestBody RefreshRequest token) throws ParseException, JOSEException {
-        System.out.println("token = " + token);
         return ResponseEntity.ok(tokenService.reissueTokens(token.refreshToken()));
     }
 }

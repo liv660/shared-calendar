@@ -11,17 +11,17 @@ public class SnowflakeIdGenerator implements IdGenerator {
     private static final long SEQUENCE_BITS = 12L;
     private static final long MAX_SEQUENCE = ~(-1L << SEQUENCE_BITS);
 
-    private final long nodeId;
+    private final Long nodeId;
     private long sequence = 0L;
     private long lastTimestamp = -1L;
 
-    public SnowflakeIdGenerator(@Value("${id.snowflake.node-id}") long nodeId) {
+    public SnowflakeIdGenerator(@Value("${id.snowflake.node-id}") Long nodeId) {
         this.nodeId = nodeId;
     }
 
     @Override
     @Synchronized
-    public long nextId() {
+    public Long nextId() {
         long currentTimeMillis = System.currentTimeMillis();
         if (currentTimeMillis < lastTimestamp) {
             throw new IllegalStateException("Clock moved back to the future");
