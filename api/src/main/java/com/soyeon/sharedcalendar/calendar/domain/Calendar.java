@@ -2,12 +2,14 @@ package com.soyeon.sharedcalendar.calendar.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "calendar")
 @Getter
+@DynamicUpdate
 public class Calendar {
     @Id
     private Long calendarId;
@@ -30,5 +32,17 @@ public class Calendar {
         c.defaultAccessLevel = accessLevel;
         c.profileImgUrl = profileImgUrl;
         return c;
+    }
+
+    public void changeCalendarName(String calendarName) {
+        this.calendarName = calendarName;
+    }
+
+    public void changeDefaultAccessLevel(CalendarAccessLevel accessLevel) {
+        this.defaultAccessLevel = accessLevel;
+    }
+
+    public void changeProfileImgUrl(String profileImgUrl) {
+        this.profileImgUrl = profileImgUrl;
     }
 }

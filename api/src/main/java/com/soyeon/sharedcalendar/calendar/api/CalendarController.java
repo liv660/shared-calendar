@@ -33,4 +33,10 @@ public class CalendarController {
         calendarService.deleteCalendar(calendarId);
         return ResponseEntity.ok(new DeleteResponse(String.valueOf(calendarId),"캘린더 삭제 완료"));
     }
+
+    @Operation(summary = "캘린더 수정", description = "캘린더를 수정한다.")
+    @PatchMapping("/{calendarId}")
+    public ResponseEntity<CalendarResponse> updateCalendar(@PathVariable Long calendarId, @RequestBody CalendarRequest request) {
+        return ResponseEntity.ok(calendarService.updateCalendar(calendarId, request));
+    }
 }
