@@ -7,7 +7,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.soyeon.sharedcalendar.auth.config.JwtProperties;
 import com.soyeon.sharedcalendar.auth.domain.MemberPrincipal;
-import com.soyeon.sharedcalendar.auth.dto.TokenResponse;
+import com.soyeon.sharedcalendar.auth.dto.response.TokenResponse;
 import com.soyeon.sharedcalendar.member.domain.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

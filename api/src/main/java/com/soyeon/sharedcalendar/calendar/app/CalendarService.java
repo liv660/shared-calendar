@@ -1,10 +1,10 @@
 package com.soyeon.sharedcalendar.calendar.app;
 
 import com.soyeon.sharedcalendar.calendar.domain.Calendar;
+import com.soyeon.sharedcalendar.calendar.domain.CalendarEvent;
 import com.soyeon.sharedcalendar.calendar.domain.repository.CalendarRepository;
-import com.soyeon.sharedcalendar.calendar.dto.CalendarRequest;
-import com.soyeon.sharedcalendar.calendar.dto.CalendarResponse;
-import com.soyeon.sharedcalendar.common.id.SnowflakeIdGenerator;
+import com.soyeon.sharedcalendar.calendar.dto.request.CalendarRequest;
+import com.soyeon.sharedcalendar.calendar.dto.response.CalendarResponse;
 import com.soyeon.sharedcalendar.common.security.SecurityUtils;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -14,12 +14,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
+import java.util.List;
+
+import static com.soyeon.sharedcalendar.calendar.domain.CalendarAccessLevel.*;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class CalendarService {
-    private final SnowflakeIdGenerator idGenerator;
     private final CalendarRepository calendarRepository;
 
     @Value("${profile.default-calendar}")
@@ -33,25 +35,19 @@ public class CalendarService {
     @Transactional
     public CalendarResponse createCalendar(CalendarRequest request) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        Long calendarId = idGenerator.nextId();
 
         String profileImgUrl = request.profileImgUrl();
         if (profileImgUrl == null || profileImgUrl.isEmpty()) {
             profileImgUrl = defaultProfileImgUrl;
         }
 
-        Calendar calendar = Calendar.create(calendarId,
-                memberId,
+        Calendar calendar = Calendar.create(memberId,
                 request.calendarName(),
-                request.accessLevel(),
+                request.accessLevel() == null ? READ_ONLY : request.accessLevel(),
                 profileImgUrl);
-        calendarRepository.save(calendar);
+        Calendar saved = calendarRepository.save(calendar);
 
-        return CalendarResponse.create(calendarId,
-                memberId,
-                request.calendarName(),
-                request.accessLevel(),
-                profileImgUrl);
+        return CalendarResponse.of(saved, new ArrayList<>());
     }
 
     /**
@@ -87,7 +83,24 @@ public class CalendarService {
             }
             calendarRepository.update(calendar);
         }
-        return CalendarResponse.from(calendar, new ArrayList<>());
+
+        //TODO 일정 조회
+        List<CalendarEvent> events = new ArrayList<>();
+        return CalendarResponse.of(calendar, events);
+    }
+
+    /**
+     * 캘린더를 조회한다. (상세 일정 포함)
+     * @param calendarId
+     * @return
+     */
+    public CalendarResponse getCalendar(Long calendarId) {
+        Calendar calendar = isValidCalendar(calendarId);
+        Long memberId = SecurityUtils.getCurrentMemberId();
+        //TODO 일정 조회
+        List<CalendarEvent> events = new ArrayList<>();
+        return CalendarResponse.of(calendar, events);
+
     }
 
     /**

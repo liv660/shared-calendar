@@ -1,6 +1,5 @@
 package com.soyeon.sharedcalendar.member.app;
 
-import com.soyeon.sharedcalendar.common.id.SnowflakeIdGenerator;
 import com.soyeon.sharedcalendar.member.domain.Member;
 import com.soyeon.sharedcalendar.member.domain.repository.MemberRepository;
 import com.soyeon.sharedcalendar.member.dto.SignupRequest;
@@ -13,20 +12,14 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class MemberService {
     private final MemberRepository memberRepository;
-    private final SnowflakeIdGenerator idGenerator;
 
     @Value("${profile.default-member}")
     private String defaultProfileImgUrl;
 
     @Transactional
     public Member signup(SignupRequest request) {
-        String profileImgUrl = request.profileImgUrl();
-        Member member = Member.create(idGenerator.nextId(),
-                request.provider(),
-                request.providerUserId(),
-                request.email(),
-                request.name(),
-                profileImgUrl == null ? defaultProfileImgUrl : profileImgUrl);
+        String profileImgUrl = request.profileImgUrl() == null ? defaultProfileImgUrl : request.profileImgUrl();
+        Member member = Member.create(request, profileImgUrl);
         memberRepository.save(member);
         return member;
     }

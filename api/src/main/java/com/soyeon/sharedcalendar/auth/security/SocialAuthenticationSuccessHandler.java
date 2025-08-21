@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.soyeon.sharedcalendar.auth.app.TokenService;
 import com.soyeon.sharedcalendar.auth.domain.MemberPrincipal;
-import com.soyeon.sharedcalendar.auth.dto.TokenResponse;
+import com.soyeon.sharedcalendar.auth.dto.response.TokenResponse;
 import com.soyeon.sharedcalendar.member.app.MemberService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

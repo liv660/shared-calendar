@@ -2,8 +2,8 @@ package com.soyeon.sharedcalendar.auth.api;
 
 import com.nimbusds.jose.JOSEException;
 import com.soyeon.sharedcalendar.auth.app.TokenService;
-import com.soyeon.sharedcalendar.auth.dto.RefreshRequest;
-import com.soyeon.sharedcalendar.auth.dto.TokenResponse;
+import com.soyeon.sharedcalendar.auth.dto.request.RefreshRequest;
+import com.soyeon.sharedcalendar.auth.dto.response.TokenResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

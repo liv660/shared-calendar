@@ -1,8 +1,8 @@
 package com.soyeon.sharedcalendar.calendar.api;
 
 import com.soyeon.sharedcalendar.calendar.app.CalendarService;
-import com.soyeon.sharedcalendar.calendar.dto.CalendarRequest;
-import com.soyeon.sharedcalendar.calendar.dto.CalendarResponse;
+import com.soyeon.sharedcalendar.calendar.dto.request.CalendarRequest;
+import com.soyeon.sharedcalendar.calendar.dto.response.CalendarResponse;
 import com.soyeon.sharedcalendar.common.dto.DeleteResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -38,5 +38,11 @@ public class CalendarController {
     @PatchMapping("/{calendarId}")
     public ResponseEntity<CalendarResponse> updateCalendar(@PathVariable Long calendarId, @RequestBody CalendarRequest request) {
         return ResponseEntity.ok(calendarService.updateCalendar(calendarId, request));
+    }
+
+    @Operation(summary = "캘린더 조회", description = "캘린더를 조회한다.")
+    @GetMapping("/{calendarId}")
+    public ResponseEntity<CalendarResponse> getCalendar(@PathVariable Long calendarId) {
+        return ResponseEntity.ok(calendarService.getCalendar(calendarId));
     }
 }

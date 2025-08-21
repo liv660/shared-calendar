@@ -1,5 +1,6 @@
 package com.soyeon.sharedcalendar.calendar.domain;
 
+import com.soyeon.sharedcalendar.common.id.SnowflakeId;
 import jakarta.persistence.*;
 import lombok.Getter;
 import org.hibernate.annotations.DynamicUpdate;
@@ -12,11 +13,15 @@ import java.time.LocalDateTime;
 @DynamicUpdate
 public class Calendar {
     @Id
+    @GeneratedValue @SnowflakeId
     private Long calendarId;
     private Long ownerId;
+    @Column(length = 50, nullable = false)
     private String calendarName;
     @Enumerated(EnumType.STRING)
+    @Column(length = 16, nullable = false)
     private CalendarAccessLevel defaultAccessLevel;
+    @Column(length = 2083)
     private String profileImgUrl;
     @Column(insertable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -24,9 +29,8 @@ public class Calendar {
     private LocalDateTime updatedAt;
     private LocalDateTime deletedAt;
 
-    public static Calendar create(Long calendarId, Long ownerId, String calendarName, CalendarAccessLevel accessLevel, String profileImgUrl) {
+    public static Calendar create(Long ownerId, String calendarName, CalendarAccessLevel accessLevel, String profileImgUrl) {
         Calendar c = new Calendar();
-        c.calendarId = calendarId;
         c.ownerId = ownerId;
         c.calendarName = calendarName;
         c.defaultAccessLevel = accessLevel;
