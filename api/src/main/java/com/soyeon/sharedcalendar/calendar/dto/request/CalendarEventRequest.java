@@ -22,7 +22,7 @@ CalendarEventRequest(@NotBlank String title,
                      String color,
                      @NotNull(groups = BasicChecks.class) LocalDateTime startAt,
                      @NotNull(groups = BasicChecks.class) LocalDateTime endAt,
-                     Set<Member> members) {
+                     Set<Long> visibleMemberIds) {
 
     @AssertTrue(groups = BusinessRules.class)
     public boolean isValidDateTime() {

@@ -1,7 +1,7 @@
 package com.soyeon.sharedcalendar.member.domain;
 
 import com.soyeon.sharedcalendar.auth.domain.SocialProvider;
-import com.soyeon.sharedcalendar.calendar.domain.CalendarEvent;
+import com.soyeon.sharedcalendar.calendar.domain.EventVisibility;
 import com.soyeon.sharedcalendar.common.id.SnowflakeId;
 import com.soyeon.sharedcalendar.member.dto.SignupRequest;
 import jakarta.persistence.*;
@@ -10,6 +10,8 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+
+import static jakarta.persistence.CascadeType.*;
 
 @Entity
 @Table(name = "member")
@@ -27,9 +29,6 @@ public class Member {
     private String refreshToken;
     @Column(length = 2083)
     private String profileImgUrl;
-    //TODO EventVisibility Entity로 분리
-    @ManyToMany(mappedBy = "visibleMembers")
-    Set<CalendarEvent> visibleEvents = new HashSet<>();
     @Column(insertable = false, updatable = false)
     private boolean isActive;
     @Column(insertable = false, updatable = false)
@@ -37,6 +36,9 @@ public class Member {
     @Column(insertable = false, updatable = false)
     private LocalDateTime lastLoginAt;
     private LocalDateTime withdrawnAt;
+
+    @OneToMany(mappedBy = "member", cascade = {PERSIST, REMOVE}, orphanRemoval = true)
+    Set<EventVisibility> visibilityEvents = new HashSet<>();
 
     public static Member create(SignupRequest request, String profileImgUrl) {
         Member m =  new Member();

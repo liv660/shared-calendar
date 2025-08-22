@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/calendars")
@@ -42,7 +43,9 @@ public class CalendarController {
 
     @Operation(summary = "캘린더 조회", description = "캘린더를 조회한다.")
     @GetMapping("/{calendarId}")
-    public ResponseEntity<CalendarResponse> getCalendar(@PathVariable Long calendarId) {
-        return ResponseEntity.ok(calendarService.getCalendar(calendarId));
+    public ResponseEntity<CalendarResponse> getCalendar(@PathVariable Long calendarId,
+                                                        @RequestParam(required = false) LocalDateTime from,
+                                                        @RequestParam(required = false) LocalDateTime to) {
+        return ResponseEntity.ok(calendarService.getCalendar(calendarId, from, to));
     }
 }

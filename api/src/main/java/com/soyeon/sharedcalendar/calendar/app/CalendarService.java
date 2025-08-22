@@ -2,10 +2,10 @@ package com.soyeon.sharedcalendar.calendar.app;
 
 import com.soyeon.sharedcalendar.calendar.domain.Calendar;
 import com.soyeon.sharedcalendar.calendar.domain.CalendarEvent;
+import com.soyeon.sharedcalendar.calendar.domain.repository.CalendarEventRepository;
 import com.soyeon.sharedcalendar.calendar.domain.repository.CalendarRepository;
 import com.soyeon.sharedcalendar.calendar.dto.request.CalendarRequest;
 import com.soyeon.sharedcalendar.calendar.dto.response.CalendarResponse;
-import com.soyeon.sharedcalendar.common.security.SecurityUtils;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,16 +13,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.soyeon.sharedcalendar.calendar.domain.CalendarAccessLevel.*;
+import static com.soyeon.sharedcalendar.calendar.utils.CalendarUtils.*;
+import static com.soyeon.sharedcalendar.common.security.SecurityUtils.*;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class CalendarService {
     private final CalendarRepository calendarRepository;
+    private final CalendarEventRepository calendarEventRepository;
 
     @Value("${profile.default-calendar}")
     private String defaultProfileImgUrl;
@@ -34,7 +38,7 @@ public class CalendarService {
      */
     @Transactional
     public CalendarResponse createCalendar(CalendarRequest request) {
-        Long memberId = SecurityUtils.getCurrentMemberId();
+        Long memberId = getCurrentMemberId();
 
         String profileImgUrl = request.profileImgUrl();
         if (profileImgUrl == null || profileImgUrl.isEmpty()) {
@@ -84,8 +88,11 @@ public class CalendarService {
             calendarRepository.update(calendar);
         }
 
-        //TODO 일정 조회
-        List<CalendarEvent> events = new ArrayList<>();
+        List<CalendarEvent> events = calendarEventRepository.findReadable(
+                calendarId,
+                getCurrentMemberId(),
+                getDefaultStartDate(),
+                getDefaultEndDate());
         return CalendarResponse.of(calendar, events);
     }
 
@@ -94,13 +101,17 @@ public class CalendarService {
      * @param calendarId
      * @return
      */
-    public CalendarResponse getCalendar(Long calendarId) {
+    public CalendarResponse getCalendar(Long calendarId, LocalDateTime from, LocalDateTime to) {
         Calendar calendar = isValidCalendar(calendarId);
-        Long memberId = SecurityUtils.getCurrentMemberId();
-        //TODO 일정 조회
-        List<CalendarEvent> events = new ArrayList<>();
+        if (from == null) {
+            from = getDefaultStartDate();
+        }
+        if (to == null) {
+            to = getDefaultEndDate();
+        }
+        Long memberId = getCurrentMemberId();
+        List<CalendarEvent> events = calendarEventRepository.findReadable(calendarId, memberId, from, to);
         return CalendarResponse.of(calendar, events);
-
     }
 
     /**
@@ -118,7 +129,7 @@ public class CalendarService {
      * @param calendar
      */
     private boolean isOwner(Calendar calendar) {
-        Long memberId = SecurityUtils.getCurrentMemberId();
+        Long memberId = getCurrentMemberId();
         if (!calendar.getOwnerId().equals(memberId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "캘린더 관리자만 할 수 있습니다.");
         }
