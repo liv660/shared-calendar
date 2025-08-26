@@ -3,7 +3,6 @@ package com.soyeon.sharedcalendar.member.domain;
 import com.soyeon.sharedcalendar.auth.domain.OAuth2Provider;
 import com.soyeon.sharedcalendar.calendar.domain.EventVisibility;
 import com.soyeon.sharedcalendar.common.id.SnowflakeId;
-import com.soyeon.sharedcalendar.member.dto.SignupRequest;
 import jakarta.persistence.*;
 import lombok.Getter;
 
@@ -40,13 +39,13 @@ public class Member {
     @OneToMany(mappedBy = "member", cascade = {PERSIST, REMOVE}, orphanRemoval = true)
     Set<EventVisibility> visibilityEvents = new HashSet<>();
 
-    public static Member create(SignupRequest request, String profileImgUrl) {
-        Member m =  new Member();
+    public static Member create(OAuth2Provider provider, String providerUserId, String email, String name, String profileImgUrl) {
+        Member m = new Member();
         m.memberId = null;
-        m.provider = request.provider();
-        m.providerUserId = request.providerUserId();
-        m.email = request.email();
-        m.name = request.name();
+        m.provider = provider;
+        m.providerUserId = providerUserId;
+        m.email = email;
+        m.name = name;
         m.profileImgUrl = profileImgUrl;
         return m;
     }

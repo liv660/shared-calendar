@@ -6,13 +6,11 @@ import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.soyeon.sharedcalendar.auth.config.JwtProperties;
-import com.soyeon.sharedcalendar.auth.domain.MemberPrincipal;
 import com.soyeon.sharedcalendar.auth.dto.response.AuthTokenResponse;
 import com.soyeon.sharedcalendar.member.domain.Member;
 import com.soyeon.sharedcalendar.member.domain.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
@@ -34,31 +32,31 @@ public class TokenService {
 
     /**
      * 최초 accessToken, refreshToken을 발급한다.
-     * @param principal
+     * @param member
      * @return
      */
-    public AuthTokenResponse issueToken(MemberPrincipal principal) throws JOSEException {
+    public AuthTokenResponse issueToken(Member member) throws JOSEException {
         Instant now = Instant.now();
         String accessJti = UUID.randomUUID().toString();
         String refreshJti = UUID.randomUUID().toString();
 
-        String access = signJwt(now, props.accessTtl(), principal, accessJti, "access");
-        String refresh = signJwt(now, props.refreshTtl(), principal, refreshJti, "refresh");
+        String access = signJwt(now, props.accessTtl(), member,accessJti, "access");
+        String refresh = signJwt(now, props.refreshTtl(), member, refreshJti, "refresh");
         return new AuthTokenResponse(access, refresh, getAccessExpires());
     }
 
-    private String signJwt(Instant now, Duration ttl, MemberPrincipal principal, String jti, String type) throws JOSEException {
+    private String signJwt(Instant now, Duration ttl, Member member, String jti, String type) throws JOSEException {
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .issuer(props.issuer())
-                .subject(String.valueOf(principal.memberId()))
+                .subject(String.valueOf(member.getMemberId()))
                 .audience(props.audience())
                 .issueTime(Date.from(now))
                 .notBeforeTime(Date.from(now.plusSeconds(30)))
                 .expirationTime(Date.from(now.plus(ttl)))
                 .jwtID(jti)
                 .claim("type", type)
-                .claim("email", principal.email())
-                .claim("name", principal.name())
+                .claim("email", member.getEmail())
+                .claim("name", member.getName())
                 .build();
         JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.HS256)
                 .type(JOSEObjectType.JWT)
@@ -101,32 +99,15 @@ public class TokenService {
 
         String hash = getHashedRefreshToken(refreshToken);
         Long memberId = Long.parseLong(jwt.getJWTClaimsSet().getSubject());
-        boolean present = memberRepository.findById(memberId).filter(member -> member
-                .getRefreshToken().equals(hash)).isPresent();
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new JOSEException("member not found"));
+        boolean present = member.getRefreshToken().equals(hash);
 
         if (present) {
-            MemberPrincipal principal = new MemberPrincipal(memberId,
-                    (String) jwt.getJWTClaimsSet().getClaim("email"),
-                    (String) jwt.getJWTClaimsSet().getClaim("name"));
-            AuthTokenResponse newToken = issueToken(principal);
+            AuthTokenResponse newToken = issueToken(member);
             memberRepository.updateRefreshToken(memberId, hash);
             return newToken;
         }
         return null;
-    }
-
-    /**
-     * 카카오 인증 성공 시 jwt를 발급한다.
-     * @param member
-     * @return
-     * @throws JOSEException
-     */
-    @Transactional
-    public AuthTokenResponse handleKakaoLoginSuccess(Member member) throws JOSEException {
-        AuthTokenResponse tokens = issueToken(new MemberPrincipal(
-                member.getMemberId(), member.getEmail(), member.getName()));
-        String hashedRefreshToken = getHashedRefreshToken(tokens.refreshToken());
-        memberRepository.updateRefreshToken(member.getMemberId(), hashedRefreshToken);
-        return tokens;
     }
 }

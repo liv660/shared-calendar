@@ -3,9 +3,10 @@ package com.soyeon.sharedcalendar.auth.security.handler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.soyeon.sharedcalendar.auth.app.TokenService;
-import com.soyeon.sharedcalendar.auth.domain.MemberPrincipal;
 import com.soyeon.sharedcalendar.auth.dto.response.AuthTokenResponse;
+import com.soyeon.sharedcalendar.auth.security.AppOAuth2User;
 import com.soyeon.sharedcalendar.member.app.MemberService;
+import com.soyeon.sharedcalendar.member.domain.Member;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -26,11 +27,12 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
-        MemberPrincipal principal = (MemberPrincipal) authentication.getPrincipal();
-        AuthTokenResponse tokens = null;
+        AppOAuth2User principal = (AppOAuth2User) authentication.getPrincipal();
+        Member member = memberService.findOrCreate(principal);
 
+        AuthTokenResponse tokens = null;
         try {
-            tokens = tokenService.issueToken(principal);
+            tokens = tokenService.issueToken(member);
         } catch (JOSEException e) {
             socialAuthenticationFailureHandler.onAuthenticationFailure(request,
                     response,
@@ -45,7 +47,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
                     response,
                     new InternalAuthenticationServiceException("Missing Token"));
         }
-        memberService.updateRefreshToken(principal.memberId(), hashedRefreshToken);
+        memberService.updateRefreshToken(member.getMemberId(), hashedRefreshToken);
 
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType("application/json;charset=UTF-8");
