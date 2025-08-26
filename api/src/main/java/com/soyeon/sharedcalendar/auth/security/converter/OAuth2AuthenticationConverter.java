@@ -1,7 +1,8 @@
-package com.soyeon.sharedcalendar.auth.security;
+package com.soyeon.sharedcalendar.auth.security.converter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.soyeon.sharedcalendar.auth.dto.request.SocialLoginRequest;
+import com.soyeon.sharedcalendar.auth.dto.request.OAuth2LoginRequest;
+import com.soyeon.sharedcalendar.auth.security.OAuth2AuthenticationToken;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
@@ -16,7 +17,7 @@ import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
-public class SocialAuthenticationConverter implements AuthenticationConverter {
+public class OAuth2AuthenticationConverter implements AuthenticationConverter {
     private final Validator validator;
     private final ObjectMapper objectMapper;
 
@@ -28,12 +29,12 @@ public class SocialAuthenticationConverter implements AuthenticationConverter {
         }
 
         try {
-            SocialLoginRequest dto = objectMapper.readValue(request.getInputStream(), SocialLoginRequest.class);
-            Set<ConstraintViolation<SocialLoginRequest>> violations = validator.validate(dto);
+            OAuth2LoginRequest dto = objectMapper.readValue(request.getInputStream(), OAuth2LoginRequest.class);
+            Set<ConstraintViolation<OAuth2LoginRequest>> violations = validator.validate(dto);
             if (!violations.isEmpty()) {
                 throw new BadCredentialsException(violations.iterator().next().getMessage());
             }
-            return SocialAuthenticationToken.unAuth(dto.provider(), dto.idToken(), dto.accessToken());
+            return OAuth2AuthenticationToken.unAuth(dto);
         } catch (IOException e) {
             throw new BadCredentialsException("Invalid Social Login Request", e);
         }

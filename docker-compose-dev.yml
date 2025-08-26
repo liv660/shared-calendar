@@ -1,7 +1,7 @@
 services:
   mysql-dev:
     image: mysql:8.0
-    container_name: mysql-dev
+    container_name: shared-calendar-db
     command: ["--default-authentication-plugin=mysql_native_password",
               "--collation-server=utf8mb4_0900_ai_ci",
               "--skip-character-set-client-handshake",
@@ -22,10 +22,26 @@ services:
     networks:
       - dev-network
 
+  redis:
+    image: redis:7-alpine
+    container_name: shared-calendar-redis
+    environment:
+      REDIS_PASSWORD: "${REDIS_PASSWORD:-dev*2025}"
+    command: >
+      sh -c 'exec redis-server
+      --requirepass "$${REDIS_PASSWORD}"
+      --appendonly yes
+      --maxmemory-policy allkeys-lru'
+    ports:
+      - "16379:6379"
+#    volumes:
+#      - redis_data:/data
+
 networks:
   dev-network:
     driver: bridge
 
-#volumes:
-#  mysql_data:
+volumes:
+  mysql_data:
+  redis_data:
 

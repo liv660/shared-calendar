@@ -1,6 +1,6 @@
 package com.soyeon.sharedcalendar.member.domain;
 
-import com.soyeon.sharedcalendar.auth.domain.SocialProvider;
+import com.soyeon.sharedcalendar.auth.domain.OAuth2Provider;
 import com.soyeon.sharedcalendar.calendar.domain.EventVisibility;
 import com.soyeon.sharedcalendar.common.id.SnowflakeId;
 import com.soyeon.sharedcalendar.member.dto.SignupRequest;
@@ -22,7 +22,7 @@ public class Member {
     private Long memberId;
     @Enumerated(EnumType.STRING)
     @Column(length = 10, nullable = false)
-    private SocialProvider provider;
+    private OAuth2Provider provider;
     private String providerUserId;
     private String email;
     private String name;

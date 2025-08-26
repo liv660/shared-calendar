@@ -35,8 +35,10 @@ dependencies {
         because("Fix for CVE-2025-48924 – Uncontrolled Recursion in ClassUtils.getClass")
     }
     implementation("com.nimbusds:nimbus-jose-jwt:9.37")
-    implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("org.springframework:spring-webflux")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("org.apache.commons:commons-pool2")
     compileOnly("org.projectlombok:lombok")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     runtimeOnly("com.mysql:mysql-connector-j")

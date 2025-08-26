@@ -1,12 +1,11 @@
-package com.soyeon.sharedcalendar.auth.security;
+package com.soyeon.sharedcalendar.auth.security.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.soyeon.sharedcalendar.auth.app.TokenService;
 import com.soyeon.sharedcalendar.auth.domain.MemberPrincipal;
-import com.soyeon.sharedcalendar.auth.dto.response.TokenResponse;
+import com.soyeon.sharedcalendar.auth.dto.response.AuthTokenResponse;
 import com.soyeon.sharedcalendar.member.app.MemberService;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -19,16 +18,16 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
-public class SocialAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
+public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccessHandler {
     private final TokenService tokenService;
     private final MemberService memberService;
     private final ObjectMapper objectMapper;
-    private final SocialAuthenticationFailureHandler socialAuthenticationFailureHandler;
+    private final OAuth2AuthenticationFailureHandler socialAuthenticationFailureHandler;
 
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         MemberPrincipal principal = (MemberPrincipal) authentication.getPrincipal();
-        TokenResponse tokens = null;
+        AuthTokenResponse tokens = null;
 
         try {
             tokens = tokenService.issueToken(principal);

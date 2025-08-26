@@ -1,7 +1,8 @@
 package com.soyeon.sharedcalendar.auth.security;
 
 import com.soyeon.sharedcalendar.auth.config.AuthProperties;
-import com.soyeon.sharedcalendar.auth.domain.SocialProvider;
+import com.soyeon.sharedcalendar.auth.config.AuthProperties.Provider;
+import com.soyeon.sharedcalendar.auth.domain.OAuth2Provider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
@@ -14,16 +15,16 @@ import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
-public class IdTokenDecoderRegistry {
+public class OAuth2IdTokenDecoder {
     private final AuthProperties props;
-    private final Map<SocialProvider, JwtDecoder> cache = new EnumMap<>(SocialProvider.class);
+    private final Map<OAuth2Provider, JwtDecoder> cache = new EnumMap<>(OAuth2Provider.class);
 
-    public JwtDecoder get(SocialProvider provider) {
+    public JwtDecoder get(OAuth2Provider provider) {
         return cache.computeIfAbsent(provider, this::buildDecoder);
     }
 
-    private JwtDecoder buildDecoder(SocialProvider provider) {
-        AuthProperties.Provider pv = props.getProviders().get(provider);
+    private JwtDecoder buildDecoder(OAuth2Provider provider) {
+        Provider pv = props.getProviders().get(provider);
         if (pv == null) {
             throw new IllegalArgumentException("Unknown provider " + provider);
         }

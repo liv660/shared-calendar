@@ -1,5 +1,5 @@
 package com.soyeon.sharedcalendar.auth.domain;
 
-public enum SocialProvider {
+public enum OAuth2Provider {
     GOOGLE, KAKAO
 }

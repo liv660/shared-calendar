@@ -7,10 +7,12 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.soyeon.sharedcalendar.auth.config.JwtProperties;
 import com.soyeon.sharedcalendar.auth.domain.MemberPrincipal;
-import com.soyeon.sharedcalendar.auth.dto.response.TokenResponse;
+import com.soyeon.sharedcalendar.auth.dto.response.AuthTokenResponse;
+import com.soyeon.sharedcalendar.member.domain.Member;
 import com.soyeon.sharedcalendar.member.domain.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
@@ -35,14 +37,14 @@ public class TokenService {
      * @param principal
      * @return
      */
-    public TokenResponse issueToken(MemberPrincipal principal) throws JOSEException {
+    public AuthTokenResponse issueToken(MemberPrincipal principal) throws JOSEException {
         Instant now = Instant.now();
         String accessJti = UUID.randomUUID().toString();
         String refreshJti = UUID.randomUUID().toString();
 
         String access = signJwt(now, props.accessTtl(), principal, accessJti, "access");
         String refresh = signJwt(now, props.refreshTtl(), principal, refreshJti, "refresh");
-        return new TokenResponse(access, refresh, getAccessExpires());
+        return new AuthTokenResponse(access, refresh, getAccessExpires());
     }
 
     private String signJwt(Instant now, Duration ttl, MemberPrincipal principal, String jti, String type) throws JOSEException {
@@ -93,7 +95,7 @@ public class TokenService {
      * accessToken과 refreshToken을 재발급한다.
      * @return
      */
-    public TokenResponse reissueTokens(String refreshToken) throws ParseException, JOSEException {
+    public AuthTokenResponse reissueTokens(String refreshToken) throws ParseException, JOSEException {
         SignedJWT jwt = SignedJWT.parse(refreshToken);
         jwt.verify(new MACVerifier(hs256SecretKey));
 
@@ -106,10 +108,25 @@ public class TokenService {
             MemberPrincipal principal = new MemberPrincipal(memberId,
                     (String) jwt.getJWTClaimsSet().getClaim("email"),
                     (String) jwt.getJWTClaimsSet().getClaim("name"));
-            TokenResponse newToken = issueToken(principal);
+            AuthTokenResponse newToken = issueToken(principal);
             memberRepository.updateRefreshToken(memberId, hash);
             return newToken;
         }
         return null;
+    }
+
+    /**
+     * 카카오 인증 성공 시 jwt를 발급한다.
+     * @param member
+     * @return
+     * @throws JOSEException
+     */
+    @Transactional
+    public AuthTokenResponse handleKakaoLoginSuccess(Member member) throws JOSEException {
+        AuthTokenResponse tokens = issueToken(new MemberPrincipal(
+                member.getMemberId(), member.getEmail(), member.getName()));
+        String hashedRefreshToken = getHashedRefreshToken(tokens.refreshToken());
+        memberRepository.updateRefreshToken(member.getMemberId(), hashedRefreshToken);
+        return tokens;
     }
 }

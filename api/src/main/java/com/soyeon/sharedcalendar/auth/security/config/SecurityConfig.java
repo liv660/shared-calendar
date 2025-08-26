@@ -1,9 +1,9 @@
 package com.soyeon.sharedcalendar.auth.security.config;
 
-import com.soyeon.sharedcalendar.auth.security.SocialAuthenticationConverter;
-import com.soyeon.sharedcalendar.auth.security.SocialAuthenticationFailureHandler;
-import com.soyeon.sharedcalendar.auth.security.SocialAuthenticationProvider;
-import com.soyeon.sharedcalendar.auth.security.SocialAuthenticationSuccessHandler;
+import com.soyeon.sharedcalendar.auth.security.converter.OAuth2AuthenticationConverter;
+import com.soyeon.sharedcalendar.auth.security.handler.OAuth2AuthenticationFailureHandler;
+import com.soyeon.sharedcalendar.auth.security.OAuth2AuthenticationProvider;
+import com.soyeon.sharedcalendar.auth.security.handler.OAuth2AuthenticationSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -29,15 +29,15 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     @Bean
-    AuthenticationManager authenticationManager(SocialAuthenticationProvider authenticationProvider) {
+    AuthenticationManager authenticationManager(OAuth2AuthenticationProvider authenticationProvider) {
         return new ProviderManager(authenticationProvider);
     }
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    AuthenticationManager authenticationManager,
-                                                   SocialAuthenticationConverter authenticationConverter,
-                                                   SocialAuthenticationSuccessHandler successHandler,
-                                                   SocialAuthenticationFailureHandler failureHandler
+                                                   OAuth2AuthenticationConverter authenticationConverter,
+                                                   OAuth2AuthenticationSuccessHandler successHandler,
+                                                   OAuth2AuthenticationFailureHandler failureHandler
                                                ) throws Exception {
         AuthenticationFilter loginFilter = new AuthenticationFilter(authenticationManager, authenticationConverter);
         loginFilter.setRequestMatcher(req -> {

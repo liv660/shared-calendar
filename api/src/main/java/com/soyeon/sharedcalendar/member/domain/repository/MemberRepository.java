@@ -1,6 +1,6 @@
 package com.soyeon.sharedcalendar.member.domain.repository;
 
-import com.soyeon.sharedcalendar.auth.domain.SocialProvider;
+import com.soyeon.sharedcalendar.auth.domain.OAuth2Provider;
 import com.soyeon.sharedcalendar.member.domain.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -11,7 +11,7 @@ import java.util.Optional;
 
 @Repository
 public interface MemberRepository extends JpaRepository<Member,Long> {
-    Optional<Member> findByProviderAndProviderUserId(SocialProvider provider, String providerUserId);
+    Optional<Member> findByProviderAndProviderUserId(OAuth2Provider provider, String providerUserId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
