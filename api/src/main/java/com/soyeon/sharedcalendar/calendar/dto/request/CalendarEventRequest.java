@@ -4,9 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.soyeon.sharedcalendar.calendar.domain.VisibilityType;
 import com.soyeon.sharedcalendar.common.validate.BasicChecks;
 import com.soyeon.sharedcalendar.common.validate.BusinessRules;
-import com.soyeon.sharedcalendar.member.domain.Member;
 import jakarta.validation.constraints.AssertTrue;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
@@ -14,7 +12,7 @@ import java.util.Set;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record
-CalendarEventRequest(@NotBlank String title,
+CalendarEventRequest(String title,
                      String contents,
                      Long categoryId,
                      VisibilityType visibility,

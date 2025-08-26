@@ -5,6 +5,7 @@ import com.soyeon.sharedcalendar.common.id.SnowflakeId;
 import com.soyeon.sharedcalendar.member.domain.Member;
 import jakarta.persistence.*;
 import lombok.Getter;
+import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -16,12 +17,13 @@ import static jakarta.persistence.CascadeType.*;
 @Entity
 @Table(name = "calendar_event")
 @Getter
+@DynamicUpdate
 public class CalendarEvent {
     @Id
     @GeneratedValue @SnowflakeId
     private Long calendarEventId;
     private Long calendarId;
-    @Column(length = 128, nullable = false)
+    @Column(length = 128, updatable = false)
     private String title;
     private String contents;
     private Long categoryId;

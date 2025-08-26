@@ -10,7 +10,7 @@ import lombok.Getter;
 public class EventVisibility {
 
     @EmbeddedId
-    private EventVisibilityId eventVisibilityId = new EventVisibilityId();
+    private EventVisibilityId id = new EventVisibilityId();
 
     @MapsId(value = "calendarEventId")
     @ManyToOne(fetch = FetchType.LAZY)

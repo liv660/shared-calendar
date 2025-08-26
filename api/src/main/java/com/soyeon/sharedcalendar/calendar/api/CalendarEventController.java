@@ -23,4 +23,18 @@ public class CalendarEventController {
         calendarEventService.createEvent(calendarId, request);
         return ResponseEntity.ok().body("일정이 등록되었습니다.");
     }
+
+    @Operation(summary = "일정 삭제", description = "일정을 삭제한다.")
+    @DeleteMapping("/events/{eventId}")
+    public ResponseEntity<?> deleteEvent(@PathVariable Long calendarId, @PathVariable Long eventId) {
+        calendarEventService.deleteEvent(calendarId, eventId);
+        return ResponseEntity.ok().body("삭제가 완료되었습니다.");
+    }
+
+    @Operation(summary = "일정 수정", description = "일정을 수정한다.")
+    @PatchMapping("/events/{eventId}")
+    public ResponseEntity<?> updateEvent(@PathVariable Long calendarId, @PathVariable Long eventId, @RequestBody CalendarEventRequest request) {
+        calendarEventService.updateEvent(calendarId, eventId, request);
+        return ResponseEntity.ok().body("수정이 완료되었습니다.");
+    }
 }

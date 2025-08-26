@@ -4,7 +4,6 @@ import com.soyeon.sharedcalendar.calendar.domain.CalendarEvent;
 import com.soyeon.sharedcalendar.calendar.domain.repository.CalendarEventRepository;
 import com.soyeon.sharedcalendar.calendar.domain.repository.EventVisibilityRepository;
 import com.soyeon.sharedcalendar.calendar.dto.request.CalendarEventRequest;
-import com.soyeon.sharedcalendar.common.security.SecurityUtils;
 import com.soyeon.sharedcalendar.member.domain.Member;
 import com.soyeon.sharedcalendar.member.domain.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +16,9 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static com.soyeon.sharedcalendar.calendar.domain.VisibilityType.*;
+import static com.soyeon.sharedcalendar.common.security.SecurityUtils.*;
 
 @Service
 @RequiredArgsConstructor
@@ -34,9 +36,8 @@ public class CalendarEventService {
      * @param calendarId
      * @param request
      */
-    @Transactional
     public void createEvent(Long calendarId, CalendarEventRequest request) {
-        Long memberId = SecurityUtils.getCurrentMemberId();
+        Long memberId = getCurrentMemberId();
         memberRepository.findById(Objects.requireNonNull(memberId)).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 회원입니다."));
 
@@ -55,5 +56,41 @@ public class CalendarEventService {
             event.allowOnly(visibleMembers);
         }
         calendarEventRepository.save(event);
+    }
+
+    /**
+     * 일정을 삭제한다. (일정을 생성한 사람이 삭제할 수 있음)
+     * @param calendarId
+     * @param eventId
+     */
+    @Transactional
+    public void deleteEvent(Long calendarId, Long eventId) {
+        Long memberId = getCurrentMemberId();
+        CalendarEvent event = calendarEventRepository.getCalendarEventByCalendarEventIdAndCalendarId(eventId, calendarId);
+        if (!event.getCreatedBy().equals(memberId)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "해당 일정을 생성한 사용자만 삭제할 수 있습니다.");
+        }
+        calendarEventRepository.delete(event);
+    }
+
+    /**
+     * 일정을 수정한다. (일정을 생성 또는 공유중인 사용자가 수정할 수 있음)
+     * @param calendarId
+     * @param eventId
+     * @param request
+     */
+    @Transactional
+    public void updateEvent(Long calendarId, Long eventId, CalendarEventRequest request) {
+        Long memberId = getCurrentMemberId();
+        CalendarEvent event = calendarEventRepository.getCalendarEventByCalendarEventIdAndCalendarId(eventId, calendarId);
+        if (event.getVisibility() == PUBLIC
+            && !event.getCreatedBy().equals(memberId)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "해당 일정을 생성한 사용자만 수정할 수 있습니다.");
+        }
+        //TODO 수정 기능 구현
+        CalendarEvent updated = CalendarEvent.create(calendarId, memberId, request);
+        calendarEventRepository.update(memberId, updated);
+
+
     }
 }
