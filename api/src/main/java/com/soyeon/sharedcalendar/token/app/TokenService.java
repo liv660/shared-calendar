@@ -5,10 +5,12 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import com.soyeon.sharedcalendar.member.exception.MemberNotFound;
 import com.soyeon.sharedcalendar.token.config.JwtProperties;
 import com.soyeon.sharedcalendar.token.dto.response.TokenResponse;
 import com.soyeon.sharedcalendar.member.domain.Member;
 import com.soyeon.sharedcalendar.member.domain.repository.MemberRepository;
+import com.soyeon.sharedcalendar.token.exception.InvalidTokenException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -35,7 +37,7 @@ public class TokenService {
      * @param member
      * @return
      */
-    public TokenResponse issueToken(Member member) throws JOSEException {
+    public TokenResponse issueToken(Member member) {
         Instant now = Instant.now();
         String accessJti = UUID.randomUUID().toString();
         String refreshJti = UUID.randomUUID().toString();
@@ -45,7 +47,16 @@ public class TokenService {
         return new TokenResponse(access, refresh, getAccessExpires());
     }
 
-    private String signJwt(Instant now, Duration ttl, Member member, String jti, String type) throws JOSEException {
+    /**
+     * jwt 생성
+     * @param now
+     * @param ttl
+     * @param member
+     * @param jti
+     * @param type
+     * @return
+     */
+    private String signJwt(Instant now, Duration ttl, Member member, String jti, String type) {
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .issuer(props.issuer())
                 .subject(String.valueOf(member.getMemberId()))
@@ -63,7 +74,11 @@ public class TokenService {
                 .build();
 
         SignedJWT jwt = new SignedJWT(header, claims);
-        jwt.sign(new MACSigner(hs256SecretKey.getEncoded()));
+        try {
+            jwt.sign(new MACSigner(hs256SecretKey.getEncoded()));
+        } catch (JOSEException e) {
+            throw new InvalidTokenException("서명 검증 실패", e);
+        }
         return jwt.serialize();
     }
 
@@ -93,14 +108,20 @@ public class TokenService {
      * accessToken과 refreshToken을 재발급한다.
      * @return
      */
-    public TokenResponse reissueTokens(String refreshToken) throws ParseException, JOSEException {
-        SignedJWT jwt = SignedJWT.parse(refreshToken);
-        jwt.verify(new MACVerifier(hs256SecretKey));
+    public TokenResponse reissueTokens(String refreshToken) {
+        SignedJWT jwt;
+        Long memberId;
+        try {
+            jwt = SignedJWT.parse(refreshToken);
+            jwt.verify(new MACVerifier(hs256SecretKey));
+            memberId = Long.parseLong(jwt.getJWTClaimsSet().getSubject());
+        } catch (ParseException | JOSEException e) {
+            throw new InvalidTokenException("JWT 토큰 파싱 또는 서명 검증 실패", e);
+        }
 
         String hash = getHashedRefreshToken(refreshToken);
-        Long memberId = Long.parseLong(jwt.getJWTClaimsSet().getSubject());
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new JOSEException("member not found"));
+                .orElseThrow(() -> new MemberNotFound(memberId));
         boolean present = member.getRefreshToken().equals(hash);
 
         if (present) {
@@ -108,6 +129,6 @@ public class TokenService {
             memberRepository.updateRefreshToken(memberId, hash);
             return newToken;
         }
-        return null;
+        throw new InvalidTokenException("refresh token 불일치");
     }
 }

@@ -1,6 +1,5 @@
 package com.soyeon.sharedcalendar.security.handler;
 
-import com.nimbusds.jose.JOSEException;
 import com.soyeon.sharedcalendar.security.core.MemberAuthenticationToken;
 import com.soyeon.sharedcalendar.security.core.MemberPrincipal;
 import com.soyeon.sharedcalendar.token.app.TokenService;
@@ -13,7 +12,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
-import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -37,16 +35,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         AppOAuth2User user = (AppOAuth2User) authentication.getPrincipal();
         Member member = memberService.findOrCreate(user);
 
-        TokenResponse tokens;
-        try {
-            tokens = tokenService.issueToken(member);
-        } catch (JOSEException e) {
-            socialAuthenticationFailureHandler.onAuthenticationFailure(request,
-                    response,
-                    new InternalAuthenticationServiceException(e.getLocalizedMessage(), e));
-            return;
-        }
-
+        TokenResponse tokens = tokenService.issueToken(member);
         String hashedRefreshToken = tokenService.getHashedRefreshToken(tokens.refreshToken());
         memberService.updateRefreshToken(member.getMemberId(), hashedRefreshToken);
 
