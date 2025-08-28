@@ -1,6 +1,6 @@
 package com.soyeon.sharedcalendar.member.app;
 
-import com.soyeon.sharedcalendar.auth.security.AppOAuth2User;
+import com.soyeon.sharedcalendar.security.oauth2.AppOAuth2User;
 import com.soyeon.sharedcalendar.member.domain.Member;
 import com.soyeon.sharedcalendar.member.domain.repository.MemberRepository;
 import jakarta.transaction.Transactional;

@@ -1,4 +1,4 @@
-package com.soyeon.sharedcalendar.auth.config;
+package com.soyeon.sharedcalendar.token.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

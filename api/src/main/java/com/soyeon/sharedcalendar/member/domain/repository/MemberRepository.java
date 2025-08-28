@@ -1,6 +1,6 @@
 package com.soyeon.sharedcalendar.member.domain.repository;
 
-import com.soyeon.sharedcalendar.auth.domain.OAuth2Provider;
+import com.soyeon.sharedcalendar.security.oauth2.OAuth2Provider;
 import com.soyeon.sharedcalendar.member.domain.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

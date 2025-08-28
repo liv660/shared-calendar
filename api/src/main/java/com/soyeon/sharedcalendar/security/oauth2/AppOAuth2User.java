@@ -1,6 +1,5 @@
-package com.soyeon.sharedcalendar.auth.security;
+package com.soyeon.sharedcalendar.security.oauth2;
 
-import com.soyeon.sharedcalendar.auth.domain.OAuth2Provider;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
@@ -13,7 +12,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import static com.soyeon.sharedcalendar.auth.domain.OAuth2Provider.*;
+import static com.soyeon.sharedcalendar.security.oauth2.OAuth2Provider.*;
 
 @Getter
 public class AppOAuth2User implements OAuth2User, OidcUser {
@@ -38,9 +37,8 @@ public class AppOAuth2User implements OAuth2User, OidcUser {
         this.profileImgUrl = profileImgUrl;
     }
 
-    public static OAuth2User fromGoogle(OidcUser user) {
+    public static OidcUser fromGoogle(OidcUser user) {
         Map<String, Object> attr = user.getAttributes();
-        System.out.println("attr = " + attr);
         String providerUserId = attr.get("sub").toString();
         String name = attr.get("given_name").toString();
         String email = attr.get("email").toString();
@@ -72,7 +70,7 @@ public class AppOAuth2User implements OAuth2User, OidcUser {
     //OAuth
     @Override
     public String getName() {
-        return provider.name();
+        return name;
     }
 
     //Oidc

@@ -1,6 +1,6 @@
-package com.soyeon.sharedcalendar.auth.security.config;
+package com.soyeon.sharedcalendar.security.config;
 
-import com.soyeon.sharedcalendar.auth.config.JwtProperties;
+import com.soyeon.sharedcalendar.token.config.JwtProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;

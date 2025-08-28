@@ -1,4 +1,4 @@
-package com.soyeon.sharedcalendar.auth.security.handler;
+package com.soyeon.sharedcalendar.security.handler;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

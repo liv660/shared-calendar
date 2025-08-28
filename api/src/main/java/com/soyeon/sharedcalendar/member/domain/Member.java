@@ -1,6 +1,6 @@
 package com.soyeon.sharedcalendar.member.domain;
 
-import com.soyeon.sharedcalendar.auth.domain.OAuth2Provider;
+import com.soyeon.sharedcalendar.security.oauth2.OAuth2Provider;
 import com.soyeon.sharedcalendar.calendar.domain.EventVisibility;
 import com.soyeon.sharedcalendar.common.id.SnowflakeId;
 import jakarta.persistence.*;

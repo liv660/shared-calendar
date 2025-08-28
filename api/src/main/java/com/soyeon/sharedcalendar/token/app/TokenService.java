@@ -1,12 +1,12 @@
-package com.soyeon.sharedcalendar.auth.app;
+package com.soyeon.sharedcalendar.token.app;
 
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import com.soyeon.sharedcalendar.auth.config.JwtProperties;
-import com.soyeon.sharedcalendar.auth.dto.response.AuthTokenResponse;
+import com.soyeon.sharedcalendar.token.config.JwtProperties;
+import com.soyeon.sharedcalendar.token.dto.response.TokenResponse;
 import com.soyeon.sharedcalendar.member.domain.Member;
 import com.soyeon.sharedcalendar.member.domain.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -35,14 +35,14 @@ public class TokenService {
      * @param member
      * @return
      */
-    public AuthTokenResponse issueToken(Member member) throws JOSEException {
+    public TokenResponse issueToken(Member member) throws JOSEException {
         Instant now = Instant.now();
         String accessJti = UUID.randomUUID().toString();
         String refreshJti = UUID.randomUUID().toString();
 
         String access = signJwt(now, props.accessTtl(), member,accessJti, "access");
         String refresh = signJwt(now, props.refreshTtl(), member, refreshJti, "refresh");
-        return new AuthTokenResponse(access, refresh, getAccessExpires());
+        return new TokenResponse(access, refresh, getAccessExpires());
     }
 
     private String signJwt(Instant now, Duration ttl, Member member, String jti, String type) throws JOSEException {
@@ -93,7 +93,7 @@ public class TokenService {
      * accessToken과 refreshToken을 재발급한다.
      * @return
      */
-    public AuthTokenResponse reissueTokens(String refreshToken) throws ParseException, JOSEException {
+    public TokenResponse reissueTokens(String refreshToken) throws ParseException, JOSEException {
         SignedJWT jwt = SignedJWT.parse(refreshToken);
         jwt.verify(new MACVerifier(hs256SecretKey));
 
@@ -104,7 +104,7 @@ public class TokenService {
         boolean present = member.getRefreshToken().equals(hash);
 
         if (present) {
-            AuthTokenResponse newToken = issueToken(member);
+            TokenResponse newToken = issueToken(member);
             memberRepository.updateRefreshToken(memberId, hash);
             return newToken;
         }

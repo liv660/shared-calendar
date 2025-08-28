@@ -1,4 +1,4 @@
-package com.soyeon.sharedcalendar.auth.dto.request;
+package com.soyeon.sharedcalendar.token.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 
