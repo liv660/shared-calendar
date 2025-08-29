@@ -19,16 +19,18 @@ import org.springframework.web.util.pattern.PathPatternParser;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 @Component
 public class JwtCookieAuthenticationFilter extends OncePerRequestFilter {
     private final JwtDecoder decoder;
     private final PathPatternParser parser = PathPatternParser.defaultInstance;
-    private final PathPattern[] skipMatcher = {
+    private final List<PathPattern> skipMatcher = List.of(
             parser.parse("/v3/api-docs/**"),
             parser.parse("/swagger-ui/**"),
-            parser.parse("/swagger-ui.html")
-    };
+            parser.parse("/swagger-ui.html"),
+            parser.parse("/temp/**")
+    );
 
     public JwtCookieAuthenticationFilter(JwtDecoder decoder) {
         this.decoder = decoder;
@@ -39,19 +41,16 @@ public class JwtCookieAuthenticationFilter extends OncePerRequestFilter {
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             return true;
         }
+
         PathContainer path = PathContainer.parsePath(request.getRequestURI());
-        for (PathPattern skip : skipMatcher) {
-            if (skip.matches(path)) {
-                return true;
-            }
-        }
-        return false;
+        return skipMatcher.stream().anyMatch(p -> p.matches(path));
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         if (request.getCookies() == null) {
-            throw new AuthenticationCredentialsNotFoundException("No credentials found");
+            filterChain.doFilter(request, response);
+            return;
         }
 
         String accessToken = getAccessToken(request.getCookies());
