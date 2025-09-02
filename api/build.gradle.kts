@@ -41,6 +41,7 @@ dependencies {
     implementation("org.apache.commons:commons-pool2")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
     implementation("org.springframework.security:spring-security-oauth2-jose")
+    implementation("io.minio:minio:8.5.7")
     compileOnly("org.projectlombok:lombok")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     runtimeOnly("com.mysql:mysql-connector-j")

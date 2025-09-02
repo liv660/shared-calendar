@@ -83,7 +83,7 @@ public class CalendarService {
                 calendar.changeDefaultAccessLevel(request.accessLevel());
             }
             if (request.profileImgUrl() != null && !request.profileImgUrl().isBlank()) {
-                calendar.changeProfileImgUrl(request.profileImgUrl());
+                calendar.changeProfileImg(request.profileImgUrl());
             }
             calendarRepository.update(calendar);
         }

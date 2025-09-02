@@ -27,7 +27,7 @@ public class Member {
     private String name;
     private String refreshToken;
     @Column(length = 2083)
-    private String profileImgUrl;
+    private String profileImgKey;
     @Column(insertable = false, updatable = false)
     private boolean isActive;
     @Column(insertable = false, updatable = false)
@@ -39,14 +39,14 @@ public class Member {
     @OneToMany(mappedBy = "member", cascade = {PERSIST, REMOVE}, orphanRemoval = true)
     Set<EventVisibility> visibilityEvents = new HashSet<>();
 
-    public static Member create(OAuth2Provider provider, String providerUserId, String email, String name, String profileImgUrl) {
+    public static Member create(OAuth2Provider provider, String providerUserId, String email, String name, String profileImgKey) {
         Member m = new Member();
         m.memberId = null;
         m.provider = provider;
         m.providerUserId = providerUserId;
         m.email = email;
         m.name = name;
-        m.profileImgUrl = profileImgUrl;
+        m.profileImgKey = profileImgKey;
         return m;
     }
 }

@@ -15,7 +15,7 @@ public interface CalendarRepository extends CrudRepository<Calendar, Long> {
         update Calendar c
             set c.calendarName = :#{#cal.calendarName},
                 c.defaultAccessLevel = :#{#cal.defaultAccessLevel},
-                c.profileImgUrl = :#{#cal.profileImgUrl}
+                c.profileImgKey = :#{#cal.profileImgKey}
             where c.calendarId = :#{#cal.calendarId}
     """)
     void update(@Param("cal") Calendar calendar);

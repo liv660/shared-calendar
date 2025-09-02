@@ -1,5 +1,6 @@
 package com.soyeon.sharedcalendar.security.handler;
 
+import com.soyeon.sharedcalendar.member.domain.OAuthLoginSuccessEvent;
 import com.soyeon.sharedcalendar.security.core.MemberAuthenticationToken;
 import com.soyeon.sharedcalendar.security.core.MemberPrincipal;
 import com.soyeon.sharedcalendar.token.app.TokenService;
@@ -11,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,7 +27,7 @@ import java.time.Duration;
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
     private final TokenService tokenService;
     private final MemberService memberService;
-    private final OAuth2AuthenticationFailureHandler socialAuthenticationFailureHandler;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Value("${app.front.redirect-uri}")
     private String frontRedirectUri;
@@ -34,6 +36,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         AppOAuth2User user = (AppOAuth2User) authentication.getPrincipal();
         Member member = memberService.findOrCreate(user);
+        eventPublisher.publishEvent(new OAuthLoginSuccessEvent(member.getMemberId(), user.getProfileImgUrl()));
 
         TokenResponse tokens = tokenService.issueToken(member);
         String hashedRefreshToken = tokenService.getHashedRefreshToken(tokens.refreshToken());
@@ -45,7 +48,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 , tokens);
         SecurityContextHolder.getContext().setAuthentication(authed);
 
-        response.setStatus(HttpServletResponse.SC_OK);
+        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
         response.setContentType("application/json;charset=UTF-8");
         response.addHeader("Set-Cookie", buildJwtCookie("access_token", tokens.accessToken(), Duration.ofHours(6)).toString());
         response.addHeader("Set-Cookie", buildJwtCookie("refresh_token", tokens.refreshToken(), Duration.ofDays(7)).toString());

@@ -5,6 +5,8 @@ import com.soyeon.sharedcalendar.security.filter.JwtCookieAuthenticationFilter;
 import com.soyeon.sharedcalendar.security.handler.OAuth2AuthenticationFailureHandler;
 import com.soyeon.sharedcalendar.security.handler.OAuth2AuthenticationSuccessHandler;
 import com.soyeon.sharedcalendar.security.oauth2.CustomOidcUserService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +17,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -36,22 +39,22 @@ public class SecurityConfig {
                                                    OAuth2AuthenticationFailureHandler failureHandler,
                                                    JwtCookieAuthenticationFilter jwtCookieAuthenticationFilter
                                                ) throws Exception {
-        http
-            .csrf(AbstractHttpConfigurer::disable)
+        http.csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(request -> {
                 CorsConfiguration config = new CorsConfiguration();
-                config.setAllowedOrigins(List.of("http://127.0.0.1:5173"));
-                config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
+                config.setAllowedOrigins(List.of("http://127.0.0.1:5173", "http://127.0.0.1:8080"));
+                config.setAllowedMethods(List.of("GET", "POST", "PATCH", "DELETE", "OPTIONS"));
                 config.setAllowedHeaders(List.of("*"));
                 config.setAllowCredentials(true);
                 config.setMaxAge(3600L);
                 return config;
             }))
-            .addFilterBefore(jwtCookieAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-            .authorizeHttpRequests(auth -> {
-                auth.requestMatchers("/oauth/**, /auth/refresh, /auth/kakao/init").permitAll();
-                auth.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                    .anyRequest().authenticated();
+            .addFilterBefore(jwtCookieAuthenticationFilter, BearerTokenAuthenticationFilter.class)
+            .authorizeHttpRequests(auth -> { auth
+                .requestMatchers("/temp", "/temp/**").permitAll()
+                .requestMatchers("/oauth/**").permitAll()
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .anyRequest().authenticated();
             })
             .sessionManagement(session -> {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
@@ -65,8 +68,26 @@ public class SecurityConfig {
                     .failureHandler(failureHandler)
             )
             .oauth2ResourceServer(oauth2 -> {
-                oauth2.jwt(Customizer.withDefaults());
-            });
+                oauth2.bearerTokenResolver(request -> {
+                    if (request.getCookies() != null) {
+                        for (Cookie c : request.getCookies()) {
+                            if (c.getName().equals("access_token")) { return c.getValue(); }
+                        }
+                    }
+                    return null;
+                })
+                .jwt(Customizer.withDefaults());
+            })
+            .formLogin(AbstractHttpConfigurer::disable)
+            .logout(AbstractHttpConfigurer::disable)
+            .requestCache(AbstractHttpConfigurer::disable)
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((req, res, e) -> {
+                            res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            res.setContentType("application/json;charset=UTF-8");
+                            res.getWriter().write("{\"code\":\"UNAUTHORIZED\", \"message\":\"login required\"}");
+                        })
+                );
         return http.build();
     }
 }

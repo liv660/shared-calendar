@@ -22,19 +22,19 @@ public class Calendar {
     @Column(length = 16, nullable = false)
     private CalendarAccessLevel defaultAccessLevel;
     @Column(length = 2083)
-    private String profileImgUrl;
+    private String profileImgKey;
     @Column(insertable = false, updatable = false)
     private LocalDateTime createdAt;
     @Column(insertable = false, updatable = false)
     private LocalDateTime updatedAt;
     private LocalDateTime deletedAt;
 
-    public static Calendar create(Long ownerId, String calendarName, CalendarAccessLevel accessLevel, String profileImgUrl) {
+    public static Calendar create(Long ownerId, String calendarName, CalendarAccessLevel accessLevel, String profileImgKey) {
         Calendar c = new Calendar();
         c.ownerId = ownerId;
         c.calendarName = calendarName;
         c.defaultAccessLevel = accessLevel;
-        c.profileImgUrl = profileImgUrl;
+        c.profileImgKey = profileImgKey;
         return c;
     }
 
@@ -46,7 +46,7 @@ public class Calendar {
         this.defaultAccessLevel = accessLevel;
     }
 
-    public void changeProfileImgUrl(String profileImgUrl) {
-        this.profileImgUrl = profileImgUrl;
+    public void changeProfileImg(String profileImgKey) {
+        this.profileImgKey = profileImgKey;
     }
 }

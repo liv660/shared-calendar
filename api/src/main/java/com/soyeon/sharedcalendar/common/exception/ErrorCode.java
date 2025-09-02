@@ -7,7 +7,10 @@ public enum ErrorCode {
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "INVALID_TOKEN"),
 
     //member
-    MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER_NOT_FOUND"),;
+    MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER_NOT_FOUND"),
+
+    //minio
+    MINIO_BUCKETS_ERROR(HttpStatus.BAD_REQUEST, "MINIO_BUCKETS_ERROR"),;
 
     public final HttpStatus status;
     public final String code;
