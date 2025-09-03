@@ -1,5 +1,6 @@
 package com.soyeon.sharedcalendar.security.handler;
 
+import com.soyeon.sharedcalendar.common.crypto.HashingService;
 import com.soyeon.sharedcalendar.member.domain.OAuthLoginSuccessEvent;
 import com.soyeon.sharedcalendar.security.core.MemberAuthenticationToken;
 import com.soyeon.sharedcalendar.security.core.MemberPrincipal;
@@ -35,12 +36,17 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         AppOAuth2User user = (AppOAuth2User) authentication.getPrincipal();
-        Member member = memberService.findOrCreate(user);
-        eventPublisher.publishEvent(new OAuthLoginSuccessEvent(member.getMemberId(), user.getProfileImgUrl()));
+        Member member = memberService.findMember(user.getProvider(), user.getProviderUserId());
+
+        //신규 회원 -> 프로필 이미지 update event
+        if (member == null) {
+            member = memberService.createMember(user);
+            eventPublisher.publishEvent(new OAuthLoginSuccessEvent(member, user.getProfileImgUrl()));
+        }
 
         TokenResponse tokens = tokenService.issueToken(member);
-        String hashedRefreshToken = tokenService.getHashedRefreshToken(tokens.refreshToken());
-        memberService.updateRefreshToken(member.getMemberId(), hashedRefreshToken);
+        String hash = HashingService.hash(tokens.refreshToken());
+        memberService.updateRefreshToken(member, hash);
 
         MemberAuthenticationToken authed = MemberAuthenticationToken.auth(new MemberPrincipal(member.getMemberId(),
                         member.getEmail(),

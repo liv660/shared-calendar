@@ -11,7 +11,7 @@ public record CalendarResponse(
         Long ownerId,
         String calendarName,
         CalendarAccessLevel accessLevel,
-        String profileImgUrl,
+        String profileImgKey,
         List<CalendarEventResponse> events
 ) {
     public static CalendarResponse of(Calendar c, List<CalendarEvent> events) {
@@ -19,7 +19,7 @@ public record CalendarResponse(
                 c.getOwnerId(),
                 c.getCalendarName(),
                 c.getDefaultAccessLevel(),
-                c.getProfileImgUrl(),
+                c.getProfileImgKey(),
                 events.stream().map(CalendarEventResponse::from).toList());
     }
 }

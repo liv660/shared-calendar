@@ -1,4 +1,4 @@
 package com.soyeon.sharedcalendar.member.domain;
 
-public record OAuthLoginSuccessEvent(Long memberId, String profileImgUrl) {
+public record OAuthLoginSuccessEvent(Member member, String profileImgUrl) {
 }

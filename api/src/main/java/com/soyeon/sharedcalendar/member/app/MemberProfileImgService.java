@@ -1,7 +1,14 @@
 package com.soyeon.sharedcalendar.member.app;
 
+import com.soyeon.sharedcalendar.common.crypto.HashingService;
+import com.soyeon.sharedcalendar.common.img.ObjectKeyGenerator;
+import com.soyeon.sharedcalendar.common.img.UploadResult;
 import com.soyeon.sharedcalendar.config.minio.MinioException;
 import com.soyeon.sharedcalendar.config.minio.MinioProperties;
+import com.soyeon.sharedcalendar.member.domain.Member;
+import com.soyeon.sharedcalendar.member.domain.img.MemberImgMeta;
+import com.soyeon.sharedcalendar.member.domain.img.SourceType;
+import com.soyeon.sharedcalendar.member.domain.repository.MemberImgMetaRepository;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.errors.*;
@@ -17,29 +24,28 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Set;
-import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ProfileImageService {
+public class MemberProfileImgService {
     private final WebClient webClient = WebClient.create();
     private final MinioClient minioClient;
     private final MinioProperties minioProperties;
+    private final MemberImgMetaRepository memberImgMetaRepository;
 
     private static final Set<String> ALLOWED_TYPES = Set.of("image/jpeg", "image/jpg", "image/png", "image/webp");
     private static final long MAX_BYTES = 5L * 1024 * 1024;
 
     /**
      * 이미지 다운로드 후 성공 시 minio에 업로드
+     *
      * @param memberId
-     * @param profileImgUrl
+     * @param profileImgUrl provider 에서 조회한 프로필 사진 url
      * @return
      */
-    public Mono<String> ingestFromUrl(Long memberId, String profileImgUrl) {
+    public Mono<UploadResult> ingestFromUrl(Long memberId, String profileImgUrl) {
        return webClient.get()
                .uri(profileImgUrl)
                .accept(MediaType.ALL)
@@ -53,16 +59,15 @@ public class ProfileImageService {
                        if (!ALLOWED_TYPES.contains(contentType)) {
                            throw new IllegalArgumentException("Invalid content type: " + contentType);
                        }
-                       //success -> upload
+                       // success -> upload
                        return res.bodyToMono(byte[].class)
                                .flatMap(bytes -> {
                                    if (bytes.length == 0 || bytes.length > MAX_BYTES) {
                                        return Mono.error(new IllegalArgumentException("Invalid bytes length: " + bytes.length));
                                    }
 
-                                   String objectKey = buildObjectKey(memberId, contentType);
-                                   log.info("[ingestFromUrl] object key: {}", objectKey);
-                                   return uploadToMiniO(bytes, contentType, objectKey).thenReturn(objectKey);
+                                   String objectKey = ObjectKeyGenerator.buildObjectKey(memberId, contentType);
+                                   return uploadToMiniO(bytes, contentType, objectKey).thenReturn(new UploadResult(objectKey, contentType, bytes));
                                });
                    } else {
                        return res.bodyToMono(String.class)
@@ -71,24 +76,6 @@ public class ProfileImageService {
 
                    }
                });
-    }
-
-    /**
-     * object key 생성
-     * @param memberId
-     * @param contentType
-     * @return
-     */
-    private String buildObjectKey(Long memberId, String contentType) {
-        String ext = switch (contentType) {
-            case "image/jpeg", "image/jpg" -> "jpg";
-            case "image/png" -> "png";
-            case "image/webp" -> "webp";
-            default -> "bin";
-        };
-
-        String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
-        return "%s/%s/%s.%s".formatted(memberId, date, UUID.randomUUID(), ext);
     }
 
     /**
@@ -119,5 +106,29 @@ public class ProfileImageService {
               throw new MinioException("Image Upload Failed", e);
           }
         }).subscribeOn(Schedulers.boundedElastic()).then();
+    }
+
+
+    /**
+     * 회원 이미지 메타를 생성한다.
+     * @param result
+     * @return
+     */
+    public MemberImgMeta createMetaForOAuthMember(UploadResult result) {
+        return MemberImgMeta.create(result.objectKey(),
+                result.contentType(),
+                result.bytes(),
+                HashingService.hash(result.bytes()),
+                SourceType.OAUTH);
+    }
+
+    /**
+     * 회원 이미지 메타를 DB에 저장한다.
+     * @param meta
+     * @param member
+     */
+    public void save(MemberImgMeta meta, Member member) {
+        meta.setOwner(member);
+        memberImgMetaRepository.save(meta);
     }
 }

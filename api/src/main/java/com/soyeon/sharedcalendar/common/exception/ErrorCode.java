@@ -6,6 +6,9 @@ public enum ErrorCode {
     //token
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "INVALID_TOKEN"),
 
+    //authentication
+    AUTHENTICATION_MISSING(HttpStatus.UNAUTHORIZED, "AUTHENTICATION_MISSING"),
+
     //member
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER_NOT_FOUND"),
 
