@@ -1,13 +1,14 @@
 package com.soyeon.sharedcalendar.calendar.api;
 
+import com.soyeon.sharedcalendar.calendar.app.CalendarProfileImgService;
 import com.soyeon.sharedcalendar.calendar.app.CalendarService;
+import com.soyeon.sharedcalendar.calendar.domain.CalendarImgMeta;
 import com.soyeon.sharedcalendar.calendar.dto.request.CalendarRequest;
 import com.soyeon.sharedcalendar.calendar.dto.response.CalendarResponse;
 import com.soyeon.sharedcalendar.common.dto.DeleteResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,12 +21,19 @@ import java.time.LocalDateTime;
 @Tag(name = "Calendar", description = "캘린더 관련 API")
 public class CalendarController {
     private final CalendarService calendarService;
+    private final CalendarProfileImgService calendarProfileImgService;
 
     @Operation(summary = "캘린더 생성", description = "새 캘린더를 생성한다.")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<CalendarResponse> createCalendar(@RequestBody CalendarRequest request) {
+    public CalendarResponse createCalendar(@RequestBody CalendarRequest request) {
+        // 캘린더 생성
         CalendarResponse response = calendarService.createCalendar(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        // 이미지 메타 저장
+        CalendarImgMeta meta = calendarProfileImgService.createMetaForUpload(response.getCalendarId(), request.imgMeta());
+        calendarProfileImgService.save(meta);
+
+        response.updateProfileImgKey(meta.getObjectKey());
+        return response;
     }
 
     @Operation(summary = "캘린더 삭제", description = "캘린더를 삭제한다.")

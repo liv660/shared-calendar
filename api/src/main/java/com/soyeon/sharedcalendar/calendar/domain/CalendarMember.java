@@ -13,8 +13,8 @@ public class CalendarMember {
     @Id
     @GeneratedValue @SnowflakeId
     private Long calendarMemberId;
-    private Long calendarId;
-    private Long memberId;
+    private Long calendarId; //Calendar.calendarId
+    private Long memberId; //Member.memberId
     @Enumerated(EnumType.STRING)
     private MemberRole roleCode;
     @Enumerated(EnumType.STRING)

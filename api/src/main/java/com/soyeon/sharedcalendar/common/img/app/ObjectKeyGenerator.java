@@ -1,4 +1,4 @@
-package com.soyeon.sharedcalendar.common.img;
+package com.soyeon.sharedcalendar.common.img.app;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

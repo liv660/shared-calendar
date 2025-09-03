@@ -6,5 +6,5 @@ import com.soyeon.sharedcalendar.calendar.domain.CalendarAccessLevel;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record CalendarRequest(String calendarName,
                               CalendarAccessLevel accessLevel,
-                              String profileImgUrl) {}
+                              CalendarImgRequest imgMeta) {}
 

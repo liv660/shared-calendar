@@ -6,9 +6,9 @@ import com.soyeon.sharedcalendar.calendar.domain.repository.CalendarEventReposit
 import com.soyeon.sharedcalendar.calendar.domain.repository.CalendarRepository;
 import com.soyeon.sharedcalendar.calendar.dto.request.CalendarRequest;
 import com.soyeon.sharedcalendar.calendar.dto.response.CalendarResponse;
+import com.soyeon.sharedcalendar.common.img.app.ImgUploadService;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -25,11 +25,9 @@ import static com.soyeon.sharedcalendar.common.security.SecurityUtils.*;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class CalendarService {
+    private final ImgUploadService imgUploadService;
     private final CalendarRepository calendarRepository;
     private final CalendarEventRepository calendarEventRepository;
-
-    @Value("${profile.default-calendar}")
-    private String defaultProfileImgUrl;
 
     /**
      * 새 캘린더를 생성한다
@@ -39,18 +37,10 @@ public class CalendarService {
     @Transactional
     public CalendarResponse createCalendar(CalendarRequest request) {
         Long memberId = getCurrentMemberId();
-
-        String profileImgUrl = request.profileImgUrl();
-        if (profileImgUrl == null || profileImgUrl.isEmpty()) {
-            profileImgUrl = defaultProfileImgUrl;
-        }
-
         Calendar calendar = Calendar.create(memberId,
                 request.calendarName(),
-                request.accessLevel() == null ? READ_ONLY : request.accessLevel(),
-                profileImgUrl);
+                request.accessLevel() == null ? READ_ONLY : request.accessLevel());
         Calendar saved = calendarRepository.save(calendar);
-
         return CalendarResponse.of(saved, new ArrayList<>());
     }
 
@@ -82,9 +72,7 @@ public class CalendarService {
             if (request.accessLevel() != null) {
                 calendar.changeDefaultAccessLevel(request.accessLevel());
             }
-            if (request.profileImgUrl() != null && !request.profileImgUrl().isBlank()) {
-                calendar.changeProfileImg(request.profileImgUrl());
-            }
+            //TODO 이미지 처리
             calendarRepository.update(calendar);
         }
 

@@ -23,11 +23,11 @@ public class OAuthLoginSuccessListener {
                 .doOnSuccess(result -> {
                     log.info("[handleOAuthLoginSuccessEvent] image upload success: {}", result);
                     // 이미지 meta 저장
-                    MemberImgMeta meta = memberProfileImgService.createMetaForOAuthMember(result);
-                    memberProfileImgService.save(meta, event.member());
+                    MemberImgMeta meta = memberProfileImgService.createMetaForOAuthMember(result, event.member().getMemberId());
+                    memberProfileImgService.save(meta);
 
                     // 이미지 update
-                    memberService.updateProfileImage(event.member(), meta);
+                    memberService.updateProfileImage(event.member(), meta.getObjectKey());
                 })
                 .doOnError(error -> log.info("profile image save failed: {}", error.getMessage()))
                 .subscribe();

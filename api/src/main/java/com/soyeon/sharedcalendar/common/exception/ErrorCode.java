@@ -13,7 +13,8 @@ public enum ErrorCode {
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER_NOT_FOUND"),
 
     //minio
-    MINIO_BUCKETS_ERROR(HttpStatus.BAD_REQUEST, "MINIO_BUCKETS_ERROR"),;
+    MINIO_BUCKETS_ERROR(HttpStatus.BAD_REQUEST, "MINIO_BUCKETS_ERROR"),
+    MINIO_PRESIGNED_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "MINIO_PRESIGNED_FAIL"),;
 
     public final HttpStatus status;
     public final String code;

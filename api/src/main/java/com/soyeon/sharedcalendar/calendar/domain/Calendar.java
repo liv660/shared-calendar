@@ -29,12 +29,11 @@ public class Calendar {
     private LocalDateTime updatedAt;
     private LocalDateTime deletedAt;
 
-    public static Calendar create(Long ownerId, String calendarName, CalendarAccessLevel accessLevel, String profileImgKey) {
+    public static Calendar create(Long ownerId, String calendarName, CalendarAccessLevel accessLevel) {
         Calendar c = new Calendar();
         c.ownerId = ownerId;
         c.calendarName = calendarName;
         c.defaultAccessLevel = accessLevel;
-        c.profileImgKey = profileImgKey;
         return c;
     }
 

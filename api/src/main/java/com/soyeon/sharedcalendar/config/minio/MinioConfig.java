@@ -1,5 +1,6 @@
 package com.soyeon.sharedcalendar.config.minio;
 
+import com.soyeon.sharedcalendar.common.exception.ErrorCode;
 import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
@@ -53,7 +54,7 @@ public class MinioConfig {
                      | NoSuchAlgorithmException
                      | ServerException
                      | XmlParserException e) {
-                throw new MinioException("Bucket Initialized Error", e);
+                throw new MinioException(ErrorCode.MINIO_BUCKETS_ERROR, "Bucket Initialized Error", e);
             }
         };
     }

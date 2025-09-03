@@ -1,29 +1,19 @@
 package com.soyeon.sharedcalendar.member.app;
 
 import com.soyeon.sharedcalendar.common.crypto.HashingService;
-import com.soyeon.sharedcalendar.common.img.ObjectKeyGenerator;
-import com.soyeon.sharedcalendar.common.img.UploadResult;
-import com.soyeon.sharedcalendar.config.minio.MinioException;
-import com.soyeon.sharedcalendar.config.minio.MinioProperties;
-import com.soyeon.sharedcalendar.member.domain.Member;
+import com.soyeon.sharedcalendar.common.img.app.ImgUploadService;
+import com.soyeon.sharedcalendar.common.img.app.ObjectKeyGenerator;
+import com.soyeon.sharedcalendar.common.img.dto.UploadResult;
 import com.soyeon.sharedcalendar.member.domain.img.MemberImgMeta;
 import com.soyeon.sharedcalendar.member.domain.img.SourceType;
 import com.soyeon.sharedcalendar.member.domain.repository.MemberImgMetaRepository;
-import io.minio.MinioClient;
-import io.minio.PutObjectArgs;
-import io.minio.errors.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Set;
 
 @Slf4j
@@ -31,8 +21,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class MemberProfileImgService {
     private final WebClient webClient = WebClient.create();
-    private final MinioClient minioClient;
-    private final MinioProperties minioProperties;
+    private final ImgUploadService imgUploadService;
     private final MemberImgMetaRepository memberImgMetaRepository;
 
     private static final Set<String> ALLOWED_TYPES = Set.of("image/jpeg", "image/jpg", "image/png", "image/webp");
@@ -67,7 +56,7 @@ public class MemberProfileImgService {
                                    }
 
                                    String objectKey = ObjectKeyGenerator.buildObjectKey(memberId, contentType);
-                                   return uploadToMiniO(bytes, contentType, objectKey).thenReturn(new UploadResult(objectKey, contentType, bytes));
+                                   return imgUploadService.uploadToMiniO(bytes, contentType, objectKey).thenReturn(new UploadResult(objectKey, contentType, bytes));
                                });
                    } else {
                        return res.bodyToMono(String.class)
@@ -79,43 +68,13 @@ public class MemberProfileImgService {
     }
 
     /**
-     * MiniO에 upload
-     * @param bytes
-     * @param contentType
-     * @param objectKey
-     * @return
-     */
-    private Mono<Void> uploadToMiniO(byte[] bytes, String contentType, String objectKey) {
-        return Mono.fromRunnable(() -> {
-          try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes)) {
-                minioClient.putObject(PutObjectArgs.builder()
-                        .bucket(minioProperties.getBucket())
-                        .object(objectKey)
-                        .contentType(contentType)
-                        .stream(bis, bytes.length, -1)
-                        .build());
-          } catch (ServerException
-                   | InsufficientDataException
-                   | ErrorResponseException
-                   | IOException
-                   | NoSuchAlgorithmException
-                   | InvalidKeyException
-                   | InvalidResponseException
-                   | XmlParserException
-                   | InternalException e) {
-              throw new MinioException("Image Upload Failed", e);
-          }
-        }).subscribeOn(Schedulers.boundedElastic()).then();
-    }
-
-
-    /**
      * 회원 이미지 메타를 생성한다.
      * @param result
      * @return
      */
-    public MemberImgMeta createMetaForOAuthMember(UploadResult result) {
-        return MemberImgMeta.create(result.objectKey(),
+    public MemberImgMeta createMetaForOAuthMember(UploadResult result, Long memberId) {
+        return MemberImgMeta.create(memberId,
+                result.objectKey(),
                 result.contentType(),
                 result.bytes(),
                 HashingService.hash(result.bytes()),
@@ -125,10 +84,8 @@ public class MemberProfileImgService {
     /**
      * 회원 이미지 메타를 DB에 저장한다.
      * @param meta
-     * @param member
      */
-    public void save(MemberImgMeta meta, Member member) {
-        meta.setOwner(member);
+    public void save(MemberImgMeta meta) {
         memberImgMetaRepository.save(meta);
     }
 }

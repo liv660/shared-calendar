@@ -2,7 +2,6 @@ package com.soyeon.sharedcalendar.member.app;
 
 import com.soyeon.sharedcalendar.calendar.app.CalendarMemberService;
 import com.soyeon.sharedcalendar.common.security.SecurityUtils;
-import com.soyeon.sharedcalendar.member.domain.img.MemberImgMeta;
 import com.soyeon.sharedcalendar.member.dto.MeResponse;
 import com.soyeon.sharedcalendar.member.exception.MemberNotFound;
 import com.soyeon.sharedcalendar.security.oauth2.AppOAuth2User;
@@ -61,7 +60,7 @@ public class MemberService {
      */
     @Transactional
     public void updateRefreshToken(Member member, String newHashToken) {
-        member.setRefreshToken(newHashToken);
+        member.updateRefreshToken(newHashToken);
         memberRepository.save(member);
     }
 
@@ -69,8 +68,8 @@ public class MemberService {
      * 회원의 프로필 사진을 업데이트한다.
      * @param member MemberImgMeta profileImg
      */
-    public void updateProfileImage(Member member, MemberImgMeta meta) {
-        member.updateProfileImage(meta);
+    public void updateProfileImage(Member member, String objectKey) {
+        member.updateProfileImage(objectKey);
         memberRepository.save(member);
     }
 
@@ -85,11 +84,19 @@ public class MemberService {
                 .findById(memberId)
                 .orElseThrow(() -> new MemberNotFound(memberId));
         boolean hasCalendar = calendarMemberService.existsByMemberId(memberId);
-        return new MeResponse(m.getMemberId(),
-                m.getName(),
+        return new MeResponse(m.getName(),
                 m.getEmail(),
-                m.getProfileImgKey(),
+                getUuidFromProfileImgKey(m.getProfileImgKey()),
                 hasCalendar);
+    }
+
+    private String getUuidFromProfileImgKey(String profileImgKey) {
+        if (profileImgKey == null || profileImgKey.isEmpty()) {
+            return null;
+        }
+
+        int lastIndexOf = profileImgKey.lastIndexOf("/");
+        return profileImgKey.substring(lastIndexOf + 1);
     }
 
 

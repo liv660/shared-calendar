@@ -1,10 +1,8 @@
 package com.soyeon.sharedcalendar.member.domain.img;
 
 import com.soyeon.sharedcalendar.common.id.SnowflakeId;
-import com.soyeon.sharedcalendar.member.domain.Member;
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 
@@ -16,10 +14,7 @@ public class MemberImgMeta {
     @GeneratedValue @SnowflakeId
     private Long memberImgMetaId;
 
-    @Setter
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id")
-    private Member owner;
+    private Long ownerId; // Member.memberId
 
     @Column(length = 512)
     private String objectKey;
@@ -40,8 +35,9 @@ public class MemberImgMeta {
     @Column(insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    public static MemberImgMeta create(String objectKey, String contentType, byte[] bytes, String contentHash, SourceType sourceType) {
+    public static MemberImgMeta create(Long memberId, String objectKey, String contentType, byte[] bytes, String contentHash, SourceType sourceType) {
         MemberImgMeta meta = new MemberImgMeta();
+        meta.ownerId = memberId;
         meta.objectKey = objectKey;
         meta.contentType = contentType;
         meta.bytes = bytes.length;
