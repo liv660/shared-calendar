@@ -9,6 +9,7 @@ import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.errors.*;
+import io.minio.http.Method;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -67,6 +68,7 @@ public class ImgUploadService {
             String objectKey = ObjectKeyGenerator.buildObjectKey(memberId, contentType);
             String presignedUrl = minioClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
+                            .method(Method.PUT)
                             .bucket(bucket)
                             .object(objectKey)
                             .expiry(60 * 5)

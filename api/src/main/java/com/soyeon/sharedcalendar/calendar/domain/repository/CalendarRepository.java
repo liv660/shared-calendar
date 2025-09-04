@@ -19,4 +19,12 @@ public interface CalendarRepository extends CrudRepository<Calendar, Long> {
             where c.calendarId = :#{#cal.calendarId}
     """)
     void update(@Param("cal") Calendar calendar);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        update Calendar c
+            set c.profileImgKey = :profileImgKey
+            where c.calendarId = :calendarId
+    """)
+    void updateProfileImgKey(Long calendarId, String profileImgKey);
 }

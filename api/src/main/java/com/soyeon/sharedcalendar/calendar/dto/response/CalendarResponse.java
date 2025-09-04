@@ -20,11 +20,13 @@ public class CalendarResponse {
                              Long ownerId,
                              String calendarName,
                              CalendarAccessLevel accessLevel,
+                             String profileImgKey,
                              List<CalendarEventResponse> events) {
         this.calendarId = calendarId;
         this.ownerId = ownerId;
         this.calendarName = calendarName;
         this.accessLevel = accessLevel;
+        this.profileImgKey = profileImgKey;
         this.events = events;
     }
 
@@ -33,11 +35,8 @@ public class CalendarResponse {
                 c.getOwnerId(),
                 c.getCalendarName(),
                 c.getDefaultAccessLevel(),
+                c.getProfileImgKey(),
                 events.stream().map(CalendarEventResponse::from).toList());
-    }
-
-    public void updateProfileImgKey(String profileImgKey) {
-        this.profileImgKey = profileImgKey;
     }
 }
 

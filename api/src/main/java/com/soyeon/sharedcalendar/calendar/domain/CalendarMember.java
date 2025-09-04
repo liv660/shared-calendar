@@ -22,4 +22,13 @@ public class CalendarMember {
     @Column(nullable = false, insertable = false, updatable = false)
     private LocalDateTime joinedAt;
     private LocalDateTime deletedAt;
+
+    public static CalendarMember create(Long calendarId, Long memberId, MemberRole roleCode, CalendarAccessLevel accessLevel) {
+        CalendarMember cm = new CalendarMember();
+        cm.calendarId = calendarId;
+        cm.memberId = memberId;
+        cm.roleCode = roleCode;
+        cm.accessLevel = accessLevel;
+        return cm;
+    }
 }

@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.soyeon.sharedcalendar.calendar.domain.CalendarAccessLevel.*;
@@ -35,13 +34,23 @@ public class CalendarService {
      * @return
      */
     @Transactional
-    public CalendarResponse createCalendar(CalendarRequest request) {
+    public Calendar createCalendar(CalendarRequest request) {
         Long memberId = getCurrentMemberId();
         Calendar calendar = Calendar.create(memberId,
                 request.calendarName(),
                 request.accessLevel() == null ? READ_ONLY : request.accessLevel());
-        Calendar saved = calendarRepository.save(calendar);
-        return CalendarResponse.of(saved, new ArrayList<>());
+        return calendarRepository.save(calendar);
+    }
+
+    /**
+     * 캘린더 프로필 이미지를 변경한다.
+     * @param calendar
+     * @param profileImgKey
+     */
+    @Transactional
+    public void changeProfileImg(Calendar calendar, String profileImgKey) {
+        calendar.changeProfileImg(profileImgKey);
+        calendarRepository.updateProfileImgKey(calendar.getCalendarId(), profileImgKey);
     }
 
     /**
