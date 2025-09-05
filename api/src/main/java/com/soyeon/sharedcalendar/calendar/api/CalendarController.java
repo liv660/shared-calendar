@@ -8,6 +8,7 @@ import com.soyeon.sharedcalendar.calendar.domain.CalendarAccessLevel;
 import com.soyeon.sharedcalendar.calendar.domain.CalendarImgMeta;
 import com.soyeon.sharedcalendar.calendar.domain.MemberRole;
 import com.soyeon.sharedcalendar.calendar.dto.request.CalendarRequest;
+import com.soyeon.sharedcalendar.calendar.dto.response.CalendarListResponse;
 import com.soyeon.sharedcalendar.calendar.dto.response.CalendarResponse;
 import com.soyeon.sharedcalendar.common.dto.DeleteResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,11 +16,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -33,7 +33,7 @@ public class CalendarController {
 
     @Operation(summary = "캘린더 생성", description = "새 캘린더를 생성한다.")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public CalendarResponse createCalendar(@RequestBody CalendarRequest request) {
+    public void createCalendar(@RequestBody CalendarRequest request) {
         // 캘린더 생성
         Calendar calendar = calendarService.createCalendar(request);
 
@@ -41,13 +41,19 @@ public class CalendarController {
         calendarMemberService.addMember(calendar.getCalendarId(), MemberRole.ADMIN, CalendarAccessLevel.FULL_ACCESS);
 
         // 이미지 메타 저장
-        CalendarImgMeta meta = calendarProfileImgService.createMetaForUpload(calendar.getCalendarId(), request.imgMeta());
-        calendarProfileImgService.save(meta);
+        if (request.imgMeta() != null) {
+            CalendarImgMeta meta = calendarProfileImgService.createMetaForUpload(calendar.getCalendarId(), request.imgMeta());
+            calendarProfileImgService.save(meta);
 
-        // 캘린더에 이미지 update
-        calendarService.changeProfileImg(calendar, meta.getObjectKey());
+            // 캘린더에 이미지 update
+            calendarService.changeProfileImg(calendar, meta.getObjectKey());
+        }
+    }
 
-        return CalendarResponse.of(calendar, new ArrayList<>());
+    @Operation(summary = "공유 중인 캘린더 목록 조회", description = "공유 중인 캘린더 목록을 조회한다.")
+    @GetMapping("/list")
+    public List<CalendarListResponse> calendarList() {
+        return calendarService.getCalendarList();
     }
 
     @Operation(summary = "캘린더 삭제", description = "캘린더를 삭제한다.")
@@ -63,7 +69,7 @@ public class CalendarController {
         return calendarService.updateCalendar(calendarId, request);
     }
 
-    @Operation(summary = "캘린더 조회", description = "캘린더를 조회한다.")
+    @Operation(summary = "캘린더 조회", description = "캘린더를 조회한다. (상세 일정 포함)")
     @GetMapping("/{calendarId}")
     public CalendarResponse getCalendar(@PathVariable Long calendarId,
                                                         @RequestParam(required = false) LocalDateTime from,

@@ -5,8 +5,11 @@ import com.soyeon.sharedcalendar.calendar.domain.CalendarEvent;
 import com.soyeon.sharedcalendar.calendar.domain.repository.CalendarEventRepository;
 import com.soyeon.sharedcalendar.calendar.domain.repository.CalendarRepository;
 import com.soyeon.sharedcalendar.calendar.dto.request.CalendarRequest;
+import com.soyeon.sharedcalendar.calendar.dto.response.CalendarListResponse;
 import com.soyeon.sharedcalendar.calendar.dto.response.CalendarResponse;
 import com.soyeon.sharedcalendar.common.img.app.ImgUploadService;
+import com.soyeon.sharedcalendar.common.security.SecurityUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,12 +17,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.soyeon.sharedcalendar.calendar.domain.CalendarAccessLevel.*;
 import static com.soyeon.sharedcalendar.calendar.utils.CalendarUtils.*;
 import static com.soyeon.sharedcalendar.common.security.SecurityUtils.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -51,6 +57,24 @@ public class CalendarService {
     public void changeProfileImg(Calendar calendar, String profileImgKey) {
         calendar.changeProfileImg(profileImgKey);
         calendarRepository.updateProfileImgKey(calendar.getCalendarId(), profileImgKey);
+    }
+
+    /**
+     * 공유 중인 캘린더 목록을 조회한다.
+     */
+    public List<CalendarListResponse> getCalendarList() {
+        Long memberId = SecurityUtils.getCurrentMemberId();
+        List<Calendar> calendars = calendarRepository.findAllCalendarsByMemberId(memberId);
+
+        List<CalendarListResponse> list = new ArrayList<>();
+        for (Calendar c : calendars) {
+            log.info("[list] calendarId: {}", c.getCalendarId());
+            list.add(CalendarListResponse
+                    .create(c.getCalendarId(),
+                            c.getCalendarName(),
+                            c.getProfileImgKey()));
+        }
+        return list;
     }
 
     /**

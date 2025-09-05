@@ -7,6 +7,8 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface CalendarRepository extends CrudRepository<Calendar, Long> {
 
@@ -27,4 +29,13 @@ public interface CalendarRepository extends CrudRepository<Calendar, Long> {
             where c.calendarId = :calendarId
     """)
     void updateProfileImgKey(Long calendarId, String profileImgKey);
+
+    @Query("""
+        select c
+        from Calendar c
+            join CalendarMember cm
+                on c.calendarId = cm.calendarId
+        where cm.memberId = :memberId
+    """)
+    List<Calendar> findAllCalendarsByMemberId(Long memberId);
 }

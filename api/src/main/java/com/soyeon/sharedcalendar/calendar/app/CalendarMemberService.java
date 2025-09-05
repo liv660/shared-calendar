@@ -32,6 +32,7 @@ public class CalendarMemberService {
      * @param role ADMIN / USER
      * @param accessLevel READ_ONLY, READ_WRITE, FULL_ACCESS
      */
+    @Transactional
     public void addMember(Long calendarId, MemberRole role, CalendarAccessLevel accessLevel) {
         Long memberId = SecurityUtils.getCurrentMemberId();
         CalendarMember member = CalendarMember.create(calendarId, memberId, role, accessLevel);
