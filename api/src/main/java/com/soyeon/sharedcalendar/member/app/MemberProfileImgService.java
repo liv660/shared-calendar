@@ -1,7 +1,7 @@
 package com.soyeon.sharedcalendar.member.app;
 
 import com.soyeon.sharedcalendar.common.crypto.HashingService;
-import com.soyeon.sharedcalendar.common.img.app.ImgUploadService;
+import com.soyeon.sharedcalendar.common.img.app.ImgService;
 import com.soyeon.sharedcalendar.common.img.app.ObjectKeyGenerator;
 import com.soyeon.sharedcalendar.common.img.dto.UploadResult;
 import com.soyeon.sharedcalendar.member.domain.img.MemberImgMeta;
@@ -21,7 +21,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class MemberProfileImgService {
     private final WebClient webClient = WebClient.create();
-    private final ImgUploadService imgUploadService;
+    private final ImgService imgUploadService;
     private final MemberImgMetaRepository memberImgMetaRepository;
 
     private static final Set<String> ALLOWED_TYPES = Set.of("image/jpeg", "image/jpg", "image/png", "image/webp");

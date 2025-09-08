@@ -1,6 +1,6 @@
 package com.soyeon.sharedcalendar.common.img.api;
 
-import com.soyeon.sharedcalendar.common.img.app.ImgUploadService;
+import com.soyeon.sharedcalendar.common.img.app.ImgService;
 import com.soyeon.sharedcalendar.common.img.dto.ImgUploadResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @Tag(name = "Image", description = "이미지 업로드")
 public class ImgUploadController {
-    private final ImgUploadService imgUploadService;
+    private final ImgService imgUploadService;
 
     /**
      * object key, presigned url 생성

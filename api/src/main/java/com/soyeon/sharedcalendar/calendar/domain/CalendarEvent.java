@@ -8,6 +8,7 @@ import lombok.Getter;
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -22,27 +23,39 @@ public class CalendarEvent {
     @Id
     @GeneratedValue @SnowflakeId
     private Long calendarEventId;
+
     private Long calendarId;
+
     @Column(length = 128, updatable = false)
     private String title;
+
     private String contents;
-    private Long categoryId;
+    private Long categoryId; //CaeldnarCategory.categoryId
+
     @Enumerated(EnumType.STRING)
     @Column(length = 16, nullable = false)
     private VisibilityType visibility;
+
     private boolean allDay;
-    @Column(length = 7, nullable = false)
+
+    @Column(length = 7, nullable = false, insertable = false)
     private String color;
+
     @Column(updatable = false)
     private LocalDateTime startAt;
+
     @Column(updatable = false)
     private LocalDateTime endAt;
+
     @Column(insertable = false, updatable = false)
     private LocalDateTime createdAt;
+
     @Column(insertable = false, updatable = false)
     private LocalDateTime updatedAt;
+
     @Column(updatable = false)
     private Long createdBy;
+
     private Long updatedBy;
 
     @OneToMany(mappedBy = "event", cascade = {PERSIST, REMOVE}, orphanRemoval = true)
@@ -59,16 +72,12 @@ public class CalendarEvent {
         event.visibility = request.visibility();
         event.allDay = request.allDay();
         event.color = request.color();
-        event.startAt = getDateTime(request.allDay(), request.startAt());
-        event.endAt = getDateTime(request.allDay(), request.endAt());
+        event.startAt = getStartDateTime(request.allDay(), request.startAt());
+        event.endAt = getEndDateTime(request.allDay(), request.endAt());
         event.createdBy = memberId;
         event.updatedBy = memberId;
         event.visibilityMembers = new HashSet<>();
         return event;
-    }
-
-    public void changeColor(String color) {
-        this.color = color;
     }
 
     public void changeVisibilityToPublic() {
@@ -86,7 +95,11 @@ public class CalendarEvent {
         }
     }
 
-    private static LocalDateTime getDateTime(boolean allDay, LocalDateTime localDateTime) {
-        return allDay ? localDateTime.toLocalDate().atStartOfDay() : localDateTime;
+    private static LocalDateTime getStartDateTime(boolean allDay, LocalDateTime startAt) {
+        return allDay ? startAt.toLocalDate().atStartOfDay() : startAt;
+    }
+
+    private static LocalDateTime getEndDateTime(boolean allDay, LocalDateTime endAt) {
+        return allDay ? endAt.toLocalDate().atTime(LocalTime.MAX) : endAt;
     }
 }

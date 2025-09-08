@@ -9,33 +9,36 @@ import java.util.List;
 
 @Getter
 public class CalendarResponse {
-    private Long calendarId;
-    private Long ownerId;
+    private String calendarId;
     private String calendarName;
-    private CalendarAccessLevel accessLevel;
-    private String profileImgKey;
+    private CalendarAccessLevel defaultAccessLevel;
+    private CalendarAccessLevel myAccessLevel;
+    private boolean owner;
     private List<CalendarEventResponse> events;
 
-    private CalendarResponse(Long calendarId,
-                             Long ownerId,
+    private CalendarResponse(String calendarId,
                              String calendarName,
-                             CalendarAccessLevel accessLevel,
-                             String profileImgKey,
+                             CalendarAccessLevel defaultAccessLevel,
+                             CalendarAccessLevel myAccessLevel,
+                             boolean owner,
                              List<CalendarEventResponse> events) {
         this.calendarId = calendarId;
-        this.ownerId = ownerId;
         this.calendarName = calendarName;
-        this.accessLevel = accessLevel;
-        this.profileImgKey = profileImgKey;
+        this.defaultAccessLevel = defaultAccessLevel;
+        this.owner = owner;
+        this.myAccessLevel = myAccessLevel;
         this.events = events;
     }
 
-    public static CalendarResponse of(Calendar c, List<CalendarEvent> events) {
-        return new CalendarResponse(c.getCalendarId(),
-                c.getOwnerId(),
+    public static CalendarResponse of(Calendar c,
+                                      CalendarAccessLevel myAccessLevel,
+                                      boolean isOwner,
+                                      List<CalendarEvent> events) {
+        return new CalendarResponse(String.valueOf(c.getCalendarId()),
                 c.getCalendarName(),
                 c.getDefaultAccessLevel(),
-                c.getProfileImgKey(),
+                myAccessLevel,
+                isOwner,
                 events.stream().map(CalendarEventResponse::from).toList());
     }
 }

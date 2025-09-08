@@ -5,8 +5,8 @@ import com.soyeon.sharedcalendar.calendar.domain.VisibilityType;
 
 import java.time.LocalDateTime;
 
-public record CalendarEventResponse(Long calendarEventId,
-                                    Long calendarId,
+public record CalendarEventResponse(String calendarEventId,
+                                    String calendarId,
                                     String title,
                                     String contents,
                                     Long categoryId,
@@ -16,8 +16,8 @@ public record CalendarEventResponse(Long calendarEventId,
                                     LocalDateTime startAt,
                                     LocalDateTime endAt) {
     public static CalendarEventResponse from(CalendarEvent e) {
-        return new CalendarEventResponse(e.getCalendarEventId(),
-                e.getCalendarId(),
+        return new CalendarEventResponse(String.valueOf(e.getCalendarEventId()),
+                String.valueOf(e.getCalendarId()),
                 e.getTitle(),
                 e.getContents(),
                 e.getCategoryId(),

@@ -1,13 +1,11 @@
 package com.soyeon.sharedcalendar.calendar.app;
 
-import com.soyeon.sharedcalendar.calendar.domain.Calendar;
-import com.soyeon.sharedcalendar.calendar.domain.CalendarEvent;
-import com.soyeon.sharedcalendar.calendar.domain.repository.CalendarEventRepository;
+import com.soyeon.sharedcalendar.calendar.domain.*;
 import com.soyeon.sharedcalendar.calendar.domain.repository.CalendarRepository;
 import com.soyeon.sharedcalendar.calendar.dto.request.CalendarRequest;
 import com.soyeon.sharedcalendar.calendar.dto.response.CalendarListResponse;
 import com.soyeon.sharedcalendar.calendar.dto.response.CalendarResponse;
-import com.soyeon.sharedcalendar.common.img.app.ImgUploadService;
+import com.soyeon.sharedcalendar.common.img.app.ImgService;
 import com.soyeon.sharedcalendar.common.security.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,9 +28,11 @@ import static com.soyeon.sharedcalendar.common.security.SecurityUtils.*;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class CalendarService {
-    private final ImgUploadService imgUploadService;
     private final CalendarRepository calendarRepository;
-    private final CalendarEventRepository calendarEventRepository;
+    private final CalendarEventService calendarEventService;
+    private final CalendarProfileImgService calendarProfileImgService;
+    private final ImgService imgService;
+    private final CalendarMemberService calendarMemberService;
 
     /**
      * 새 캘린더를 생성한다
@@ -65,14 +65,14 @@ public class CalendarService {
     public List<CalendarListResponse> getCalendarList() {
         Long memberId = SecurityUtils.getCurrentMemberId();
         List<Calendar> calendars = calendarRepository.findAllCalendarsByMemberId(memberId);
-
         List<CalendarListResponse> list = new ArrayList<>();
         for (Calendar c : calendars) {
-            log.info("[list] calendarId: {}", c.getCalendarId());
+            String presignedUrl = imgService.getPresignedUrlByObjectKey(c.getProfileImgKey());
             list.add(CalendarListResponse
                     .create(c.getCalendarId(),
                             c.getCalendarName(),
-                            c.getProfileImgKey()));
+                            presignedUrl)
+                    );
         }
         return list;
     }
@@ -97,24 +97,31 @@ public class CalendarService {
      */
     @Transactional
     public CalendarResponse updateCalendar(Long calendarId, CalendarRequest request) {
+        Long memberId = getCurrentMemberId();
         Calendar calendar = isValidCalendar(calendarId);
-        if (isOwner(calendar)) {
+        boolean isOwner = isOwner(calendar);
+        if (isOwner) {
             if (request.calendarName() != null && !request.calendarName().isBlank()) {
                 calendar.changeCalendarName(request.calendarName());
             }
             if (request.accessLevel() != null) {
                 calendar.changeDefaultAccessLevel(request.accessLevel());
             }
-            //TODO 이미지 처리
+            if (request.imgMeta() != null) {
+                CalendarImgMeta meta = calendarProfileImgService.createMetaForUpload(calendar.getCalendarId(), request.imgMeta());
+                calendarProfileImgService.save(meta);
+
+                // 캘린더에 이미지 update
+                changeProfileImg(calendar, meta.getObjectKey());
+            }
             calendarRepository.update(calendar);
         }
-
-        List<CalendarEvent> events = calendarEventRepository.findReadable(
+        CalendarAccessLevel myAccessLevel = calendarMemberService.getAccessLevel(calendar.getCalendarId(), memberId);
+        List<CalendarEvent> events = calendarEventService.getEvents(
                 calendarId,
-                getCurrentMemberId(),
                 getDefaultStartDate(),
                 getDefaultEndDate());
-        return CalendarResponse.of(calendar, events);
+        return CalendarResponse.of(calendar, myAccessLevel, isOwner, events);
     }
 
     /**
@@ -123,16 +130,17 @@ public class CalendarService {
      * @return
      */
     public CalendarResponse getCalendar(Long calendarId, LocalDateTime from, LocalDateTime to) {
-        Calendar calendar = isValidCalendar(calendarId);
+        Long memberId = getCurrentMemberId();
+        Calendar c = isValidCalendar(calendarId);
+        CalendarAccessLevel myAccessLevel = calendarMemberService.getAccessLevel(c.getCalendarId(), memberId);
         if (from == null) {
             from = getDefaultStartDate();
         }
         if (to == null) {
             to = getDefaultEndDate();
         }
-        Long memberId = getCurrentMemberId();
-        List<CalendarEvent> events = calendarEventRepository.findReadable(calendarId, memberId, from, to);
-        return CalendarResponse.of(calendar, events);
+        List<CalendarEvent> events = calendarEventService.getEvents(calendarId, from, to);
+        return CalendarResponse.of(c, myAccessLevel, isOwner(c), events);
     }
 
     /**

@@ -19,10 +19,11 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
-public class ImgUploadService {
+public class ImgService {
     private final MinioClient minioClient;
     private final MinioProperties minioProperties;
 
@@ -71,9 +72,41 @@ public class ImgUploadService {
                             .method(Method.PUT)
                             .bucket(bucket)
                             .object(objectKey)
-                            .expiry(60 * 5)
+                            .expiry(60 * 5, TimeUnit.SECONDS)
                             .build());
             return new ImgUploadResponse(objectKey, presignedUrl);
+        } catch (ServerException
+                 | InsufficientDataException
+                 | ErrorResponseException
+                 | IOException
+                 | NoSuchAlgorithmException
+                 | InvalidKeyException
+                 | InvalidResponseException
+                 | XmlParserException
+                 | InternalException e) {
+            throw new MinioException(ErrorCode.MINIO_PRESIGNED_FAIL, "Fail to create presigned url ", e);
+        }
+    }
+
+    /**
+     * objectkey로 presigned url을 생성한다.
+     * @param objectKey
+     * @return
+     */
+    public String getPresignedUrlByObjectKey(String objectKey) {
+        if (objectKey == null) {
+            return null;
+        }
+
+        try {
+            String bucket = minioProperties.getBucket();
+            return minioClient.getPresignedObjectUrl(
+                    GetPresignedObjectUrlArgs.builder()
+                            .method(Method.GET)
+                            .bucket(bucket)
+                            .object(objectKey)
+                            .expiry(60 * 60, TimeUnit.SECONDS)
+                            .build());
         } catch (ServerException
                  | InsufficientDataException
                  | ErrorResponseException

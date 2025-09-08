@@ -1,9 +1,9 @@
 package com.soyeon.sharedcalendar.calendar.domain.repository;
 
 import com.soyeon.sharedcalendar.calendar.domain.CalendarEvent;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -11,14 +11,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public interface CalendarEventRepository extends CrudRepository<CalendarEvent, Long> {
-
-    List<CalendarEvent> findByCalendarId(Long calendarId);
+public interface CalendarEventRepository extends JpaRepository<CalendarEvent, Long> {
 
     @Query("""
         select ce
         from CalendarEvent ce
-            inner join EventVisibility ev on ce.calendarEventId = ev.event.calendarEventId
+            left join EventVisibility ev on ce.calendarEventId = ev.event.calendarEventId
         where ce.calendarId = :calendarId
             and (ce.visibility = 'PUBLIC'
                 or (ce.visibility = 'PRIVATE' and ev.member.memberId = :memberId))

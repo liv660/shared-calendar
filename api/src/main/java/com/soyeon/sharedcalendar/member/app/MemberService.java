@@ -1,6 +1,6 @@
 package com.soyeon.sharedcalendar.member.app;
 
-import com.soyeon.sharedcalendar.calendar.app.CalendarMemberService;
+import com.soyeon.sharedcalendar.calendar.domain.repository.CalendarMemberRepository;
 import com.soyeon.sharedcalendar.common.security.SecurityUtils;
 import com.soyeon.sharedcalendar.member.dto.MeResponse;
 import com.soyeon.sharedcalendar.member.exception.MemberNotFound;
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class MemberService {
     private final MemberRepository memberRepository;
-    private final CalendarMemberService calendarMemberService;
+    private final CalendarMemberRepository calendarMemberRepository;
 
     /**
      * 회원을 조회한다.
@@ -83,7 +83,7 @@ public class MemberService {
         Member m = memberRepository
                 .findById(memberId)
                 .orElseThrow(() -> new MemberNotFound(memberId));
-        boolean hasCalendar = calendarMemberService.existsByMemberId(memberId);
+        boolean hasCalendar = calendarMemberRepository.existsByMemberId(memberId);
         return new MeResponse(m.getName(),
                 m.getEmail(),
                 getUuidFromProfileImgKey(m.getProfileImgKey()),

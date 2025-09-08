@@ -19,9 +19,8 @@ public class CalendarEventController {
 
     @Operation(summary = "일정 등록", description = "새로운 일정을 등록한다.")
     @PostMapping("/events")
-    public ResponseEntity<?> createEvent(@PathVariable Long calendarId, @Validated(ValidationSequence.class) @RequestBody CalendarEventRequest request) {
+    public void createEvent(@PathVariable Long calendarId, @Validated(ValidationSequence.class) @RequestBody CalendarEventRequest request) {
         calendarEventService.createEvent(calendarId, request);
-        return ResponseEntity.ok().body("일정이 등록되었습니다.");
     }
 
     @Operation(summary = "일정 삭제", description = "일정을 삭제한다.")
