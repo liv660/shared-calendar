@@ -5,18 +5,17 @@ import com.soyeon.sharedcalendar.calendar.domain.repository.CalendarRepository;
 import com.soyeon.sharedcalendar.calendar.dto.request.CalendarRequest;
 import com.soyeon.sharedcalendar.calendar.dto.response.CalendarListResponse;
 import com.soyeon.sharedcalendar.calendar.dto.response.CalendarResponse;
+import com.soyeon.sharedcalendar.calendar.exception.calendar.CalendarUnauthorized;
 import com.soyeon.sharedcalendar.common.img.app.ImgService;
 import com.soyeon.sharedcalendar.common.security.SecurityUtils;
+import com.soyeon.sharedcalendar.common.validator.ValidatorService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static com.soyeon.sharedcalendar.calendar.domain.CalendarAccessLevel.*;
@@ -28,6 +27,7 @@ import static com.soyeon.sharedcalendar.common.security.SecurityUtils.*;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class CalendarService {
+    private final ValidatorService validatorService;
     private final CalendarRepository calendarRepository;
     private final CalendarEventService calendarEventService;
     private final CalendarProfileImgService calendarProfileImgService;
@@ -42,6 +42,8 @@ public class CalendarService {
     @Transactional
     public Calendar createCalendar(CalendarRequest request) {
         Long memberId = getCurrentMemberId();
+        validatorService.validateMember(memberId);
+
         Calendar calendar = Calendar.create(memberId,
                 request.calendarName(),
                 request.accessLevel() == null ? READ_ONLY : request.accessLevel());
@@ -64,6 +66,8 @@ public class CalendarService {
      */
     public List<CalendarListResponse> getCalendarList() {
         Long memberId = SecurityUtils.getCurrentMemberId();
+        validatorService.validateMember(memberId);
+
         List<Calendar> calendars = calendarRepository.findAllCalendarsByMemberId(memberId);
         List<CalendarListResponse> list = new ArrayList<>();
         for (Calendar c : calendars) {
@@ -83,7 +87,7 @@ public class CalendarService {
      */
     @Transactional
     public void deleteCalendar(Long calendarId) {
-        Calendar calendar = isValidCalendar(calendarId);
+        Calendar calendar = validatorService.validateCalendar(calendarId);
         if (isOwner(calendar)) {
             calendarRepository.deleteById(calendarId);
         }
@@ -98,7 +102,9 @@ public class CalendarService {
     @Transactional
     public CalendarResponse updateCalendar(Long calendarId, CalendarRequest request) {
         Long memberId = getCurrentMemberId();
-        Calendar calendar = isValidCalendar(calendarId);
+        validatorService.validateMember(memberId);
+
+        Calendar calendar = validatorService.validateCalendar(calendarId);
         boolean isOwner = isOwner(calendar);
         if (isOwner) {
             if (request.calendarName() != null && !request.calendarName().isBlank()) {
@@ -131,7 +137,9 @@ public class CalendarService {
      */
     public CalendarResponse getCalendar(Long calendarId, LocalDateTime from, LocalDateTime to) {
         Long memberId = getCurrentMemberId();
-        Calendar c = isValidCalendar(calendarId);
+        validatorService.validateMember(memberId);
+        Calendar c = validatorService.validateCalendar(calendarId);
+
         CalendarAccessLevel myAccessLevel = calendarMemberService.getAccessLevel(c.getCalendarId(), memberId);
         if (from == null) {
             from = getDefaultStartDate();
@@ -144,23 +152,15 @@ public class CalendarService {
     }
 
     /**
-     * 캘린더가 존재하는지 확인한다.
-     * @param calendarId
-     * @return
-     */
-    private Calendar isValidCalendar(Long calendarId) {
-        return calendarRepository.findById(calendarId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "캘린더가 존재하지 않습니다."));
-    }
-
-    /**
      * 요청한 회원이 캘린더 생성자인지 확인한다.
      * @param calendar
      */
     private boolean isOwner(Calendar calendar) {
         Long memberId = getCurrentMemberId();
+        validatorService.validateMember(memberId);
+
         if (!calendar.getOwnerId().equals(memberId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "캘린더 관리자만 할 수 있습니다.");
+            throw new CalendarUnauthorized(calendar.getCalendarId());
         }
         return true;
     }

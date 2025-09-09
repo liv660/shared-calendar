@@ -6,6 +6,7 @@ import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.soyeon.sharedcalendar.common.crypto.HashingService;
+import com.soyeon.sharedcalendar.common.validator.ValidatorService;
 import com.soyeon.sharedcalendar.member.app.MemberService;
 import com.soyeon.sharedcalendar.token.config.JwtProperties;
 import com.soyeon.sharedcalendar.token.dto.response.TokenResponse;
@@ -27,6 +28,7 @@ public class TokenService {
     private final JwtProperties props;
     private final SecretKey hs256SecretKey;
     private final MemberService memberService;
+    private final ValidatorService validatorService;
 
     /**
      * 최초 accessToken, refreshToken을 발급한다.
@@ -102,7 +104,7 @@ public class TokenService {
         }
 
         String hash = HashingService.hash(refreshToken);
-        Member member = memberService.findByMemberId(memberId);
+        Member member = validatorService.validateMember(memberId);
         boolean present = member.getRefreshToken().equals(hash);
 
         if (present) {

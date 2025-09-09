@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CalendarEventRepository extends JpaRepository<CalendarEvent, Long> {
@@ -25,7 +26,7 @@ public interface CalendarEventRepository extends JpaRepository<CalendarEvent, Lo
     """)
     List<CalendarEvent> findReadable(Long calendarId, Long memberId, LocalDateTime from, LocalDateTime to);
 
-    CalendarEvent getCalendarEventByCalendarEventIdAndCalendarId(Long eventId, Long calendarId);
+    Optional<CalendarEvent> getCalendarEventByCalendarEventIdAndCalendarId(Long eventId, Long calendarId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
@@ -41,4 +42,6 @@ public interface CalendarEventRepository extends JpaRepository<CalendarEvent, Lo
                 ce.updatedBy = :memberId
     """)
     void update(Long memberId, @Param("e") CalendarEvent event);
+
+    Optional<CalendarEvent> findByCalendarEventIdAndCalendarId(Long eventId, Long calendarId);
 }

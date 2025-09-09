@@ -4,6 +4,7 @@ import com.soyeon.sharedcalendar.calendar.domain.CalendarImgMeta;
 import com.soyeon.sharedcalendar.calendar.domain.repository.CalendarImgMetaRepository;
 import com.soyeon.sharedcalendar.calendar.dto.request.CalendarImgRequest;
 import com.soyeon.sharedcalendar.common.security.SecurityUtils;
+import com.soyeon.sharedcalendar.common.validator.ValidatorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class CalendarProfileImgService {
+    private final ValidatorService validatorService;
     private final CalendarImgMetaRepository calendarImgMetaRepository;
 
     /**
@@ -22,6 +24,8 @@ public class CalendarProfileImgService {
      */
     public CalendarImgMeta createMetaForUpload(Long calendarId, CalendarImgRequest req) {
         Long memberId = SecurityUtils.getCurrentMemberId();
+        validatorService.validateMember(memberId);
+
         return CalendarImgMeta.create(memberId, calendarId, req.objectKey(),
                 req.contentType(), req.bytes(), req.width(), req.height(), req.contentHash(), req.originalFilename());
     }

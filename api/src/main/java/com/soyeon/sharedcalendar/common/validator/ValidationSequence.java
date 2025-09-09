@@ -1,4 +1,4 @@
-package com.soyeon.sharedcalendar.common.validate;
+package com.soyeon.sharedcalendar.common.validator;
 
 import jakarta.validation.GroupSequence;
 

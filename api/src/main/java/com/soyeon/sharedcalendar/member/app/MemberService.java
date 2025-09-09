@@ -22,15 +22,6 @@ public class MemberService {
 
     /**
      * 회원을 조회한다.
-     * @param memberId
-     * @return
-     */
-    public Member findByMemberId(Long memberId) {
-        return memberRepository.findById(memberId).orElseThrow(() -> new MemberNotFound(memberId));
-    }
-
-    /**
-     * 회원을 조회한다.
      * @param provider
      * @param providerUserId
      * @return

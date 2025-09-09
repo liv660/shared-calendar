@@ -5,6 +5,7 @@ import com.soyeon.sharedcalendar.calendar.domain.VisibilityType;
 
 import java.time.LocalDateTime;
 
+// 캘린더 조회용
 public record CalendarEventResponse(String calendarEventId,
                                     String calendarId,
                                     String title,

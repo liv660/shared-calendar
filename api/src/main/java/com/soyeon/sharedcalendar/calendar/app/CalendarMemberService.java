@@ -7,6 +7,7 @@ import com.soyeon.sharedcalendar.calendar.domain.repository.CalendarMemberReposi
 import com.soyeon.sharedcalendar.calendar.dto.response.CalendarMemberResponse;
 import com.soyeon.sharedcalendar.common.img.app.ImgService;
 import com.soyeon.sharedcalendar.common.security.SecurityUtils;
+import com.soyeon.sharedcalendar.common.validator.ValidatorService;
 import com.soyeon.sharedcalendar.member.domain.Member;
 import com.soyeon.sharedcalendar.member.domain.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class CalendarMemberService {
+    private final ValidatorService validatorService;
     private final CalendarMemberRepository calendarMemberRepository;
     private final MemberRepository memberRepository;
     private final ImgService imgService;
@@ -35,6 +37,8 @@ public class CalendarMemberService {
     @Transactional
     public void addMember(Long calendarId, MemberRole role, CalendarAccessLevel accessLevel) {
         Long memberId = SecurityUtils.getCurrentMemberId();
+        validatorService.validateMember(memberId);
+
         CalendarMember member = CalendarMember.create(calendarId, memberId, role, accessLevel);
         calendarMemberRepository.save(member);
     }
@@ -46,6 +50,7 @@ public class CalendarMemberService {
      * @return
      */
     public CalendarAccessLevel getAccessLevel(Long calendarId, Long memberId) {
+        validatorService.validateCalendarAndMember(calendarId, memberId);
         CalendarMember cm = calendarMemberRepository.findCalendarMemberByCalendarIdAndMemberId(calendarId, memberId);
         return cm.getAccessLevel();
     }
@@ -56,6 +61,7 @@ public class CalendarMemberService {
      * @return
      */
     public List<CalendarMemberResponse> getMembers(Long calendarId) {
+        validatorService.validateCalendar(calendarId);
         List<Long> memberIds = calendarMemberRepository.findMemberIdsByCalendarId(calendarId)
                 .stream()
                 .map(CalendarMember::getMemberId)

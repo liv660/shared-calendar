@@ -2,7 +2,8 @@ package com.soyeon.sharedcalendar.calendar.api;
 
 import com.soyeon.sharedcalendar.calendar.app.CalendarEventService;
 import com.soyeon.sharedcalendar.calendar.dto.request.CalendarEventRequest;
-import com.soyeon.sharedcalendar.common.validate.ValidationSequence;
+import com.soyeon.sharedcalendar.calendar.dto.response.CalendarEventDetailResponse;
+import com.soyeon.sharedcalendar.common.validator.ValidationSequence;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,12 @@ public class CalendarEventController {
     @PostMapping("/events")
     public void createEvent(@PathVariable Long calendarId, @Validated(ValidationSequence.class) @RequestBody CalendarEventRequest request) {
         calendarEventService.createEvent(calendarId, request);
+    }
+
+    @Operation(summary = "일정 조회", description = "일정을 조회한다.")
+    @GetMapping("/events/{eventId}")
+    public CalendarEventDetailResponse getEvent(@PathVariable Long calendarId, @PathVariable Long eventId) {
+        return calendarEventService.getEvent(calendarId, eventId);
     }
 
     @Operation(summary = "일정 삭제", description = "일정을 삭제한다.")

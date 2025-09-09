@@ -38,13 +38,10 @@ public class CalendarEvent {
 
     private boolean allDay;
 
-    @Column(length = 7, nullable = false, insertable = false)
+    @Column(length = 7, nullable = false)
     private String color;
 
-    @Column(updatable = false)
     private LocalDateTime startAt;
-
-    @Column(updatable = false)
     private LocalDateTime endAt;
 
     @Column(insertable = false, updatable = false)
@@ -63,6 +60,7 @@ public class CalendarEvent {
 
     public static CalendarEvent create(Long calendarId,
                                        Long memberId,
+                                       String color,
                                        CalendarEventRequest request) {
         CalendarEvent event = new CalendarEvent();
         event.calendarId = calendarId;
@@ -71,7 +69,7 @@ public class CalendarEvent {
         event.categoryId = request.categoryId();
         event.visibility = request.visibility();
         event.allDay = request.allDay();
-        event.color = request.color();
+        event.color = color;
         event.startAt = getStartDateTime(request.allDay(), request.startAt());
         event.endAt = getEndDateTime(request.allDay(), request.endAt());
         event.createdBy = memberId;
@@ -100,6 +98,10 @@ public class CalendarEvent {
     }
 
     private static LocalDateTime getEndDateTime(boolean allDay, LocalDateTime endAt) {
-        return allDay ? endAt.toLocalDate().atTime(LocalTime.MAX) : endAt;
+        return allDay ? endAt.toLocalDate().atTime(LocalTime.of(23, 59, 59)) : endAt;
+    }
+
+    public void changeColor(String categoryColor) {
+        color = categoryColor;
     }
 }
