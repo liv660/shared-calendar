@@ -10,7 +10,6 @@ import com.soyeon.sharedcalendar.calendar.domain.MemberRole;
 import com.soyeon.sharedcalendar.calendar.dto.request.CalendarRequest;
 import com.soyeon.sharedcalendar.calendar.dto.response.CalendarListResponse;
 import com.soyeon.sharedcalendar.calendar.dto.response.CalendarResponse;
-import com.soyeon.sharedcalendar.common.dto.DeleteResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -58,9 +57,8 @@ public class CalendarController {
 
     @Operation(summary = "캘린더 삭제", description = "캘린더를 삭제한다.")
     @DeleteMapping("/{calendarId}")
-    public DeleteResponse deleteCalendar(@PathVariable Long calendarId) {
+    public void deleteCalendar(@PathVariable Long calendarId) {
         calendarService.deleteCalendar(calendarId);
-        return new DeleteResponse(String.valueOf(calendarId),"캘린더 삭제 완료");
     }
 
     @Operation(summary = "캘린더 수정", description = "캘린더를 수정한다.")

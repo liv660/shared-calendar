@@ -42,8 +42,6 @@ public class CalendarService {
     @Transactional
     public Calendar createCalendar(CalendarRequest request) {
         Long memberId = getCurrentMemberId();
-        validatorService.validateMember(memberId);
-
         Calendar calendar = Calendar.create(memberId,
                 request.calendarName(),
                 request.accessLevel() == null ? READ_ONLY : request.accessLevel());
@@ -66,8 +64,6 @@ public class CalendarService {
      */
     public List<CalendarListResponse> getCalendarList() {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        validatorService.validateMember(memberId);
-
         List<Calendar> calendars = calendarRepository.findAllCalendarsByMemberId(memberId);
         List<CalendarListResponse> list = new ArrayList<>();
         for (Calendar c : calendars) {
@@ -102,8 +98,6 @@ public class CalendarService {
     @Transactional
     public CalendarResponse updateCalendar(Long calendarId, CalendarRequest request) {
         Long memberId = getCurrentMemberId();
-        validatorService.validateMember(memberId);
-
         Calendar calendar = validatorService.validateCalendar(calendarId);
         boolean isOwner = isOwner(calendar);
         if (isOwner) {
@@ -137,9 +131,7 @@ public class CalendarService {
      */
     public CalendarResponse getCalendar(Long calendarId, LocalDateTime from, LocalDateTime to) {
         Long memberId = getCurrentMemberId();
-        validatorService.validateMember(memberId);
         Calendar c = validatorService.validateCalendar(calendarId);
-
         CalendarAccessLevel myAccessLevel = calendarMemberService.getAccessLevel(c.getCalendarId(), memberId);
         if (from == null) {
             from = getDefaultStartDate();
@@ -157,8 +149,6 @@ public class CalendarService {
      */
     private boolean isOwner(Calendar calendar) {
         Long memberId = getCurrentMemberId();
-        validatorService.validateMember(memberId);
-
         if (!calendar.getOwnerId().equals(memberId)) {
             throw new CalendarUnauthorized(calendar.getCalendarId());
         }

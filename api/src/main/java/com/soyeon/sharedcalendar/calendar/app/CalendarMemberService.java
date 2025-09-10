@@ -37,8 +37,6 @@ public class CalendarMemberService {
     @Transactional
     public void addMember(Long calendarId, MemberRole role, CalendarAccessLevel accessLevel) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        validatorService.validateMember(memberId);
-
         CalendarMember member = CalendarMember.create(calendarId, memberId, role, accessLevel);
         calendarMemberRepository.save(member);
     }

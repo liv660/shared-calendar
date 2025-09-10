@@ -7,7 +7,6 @@ import com.soyeon.sharedcalendar.common.validator.ValidationSequence;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,15 +31,13 @@ public class CalendarEventController {
 
     @Operation(summary = "일정 삭제", description = "일정을 삭제한다.")
     @DeleteMapping("/events/{eventId}")
-    public ResponseEntity<?> deleteEvent(@PathVariable Long calendarId, @PathVariable Long eventId) {
+    public void deleteEvent(@PathVariable Long calendarId, @PathVariable Long eventId) {
         calendarEventService.deleteEvent(calendarId, eventId);
-        return ResponseEntity.ok().body("삭제가 완료되었습니다.");
     }
 
     @Operation(summary = "일정 수정", description = "일정을 수정한다.")
     @PatchMapping("/events/{eventId}")
-    public ResponseEntity<?> updateEvent(@PathVariable Long calendarId, @PathVariable Long eventId, @RequestBody CalendarEventRequest request) {
+    public void updateEvent(@PathVariable Long calendarId, @PathVariable Long eventId, @RequestBody CalendarEventRequest request) {
         calendarEventService.updateEvent(calendarId, eventId, request);
-        return ResponseEntity.ok().body("수정이 완료되었습니다.");
     }
 }

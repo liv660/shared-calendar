@@ -21,8 +21,11 @@ public record CalendarEventDetailResponse(String calendarEventId,
                                           String color,
                                           LocalDateTime startAt,
                                           LocalDateTime endAt,
-                                          boolean isCreateByMe) {
-    public static CalendarEventDetailResponse from(CalendarEvent e, List<CalendarCategoriesResponse> categories, Set<MemberDto> visibleMembers, boolean isCreateByMe) {
+                                          boolean isCreatedByMe) {
+    public static CalendarEventDetailResponse from(CalendarEvent e,
+                                                   List<CalendarCategoriesResponse> categories,
+                                                   Set<MemberDto> visibleMembers,
+                                                   boolean isCreatedByMe) {
         return new CalendarEventDetailResponse(String.valueOf(e.getCalendarEventId()),
                 String.valueOf(e.getCalendarId()),
                 e.getTitle(),
@@ -35,6 +38,6 @@ public record CalendarEventDetailResponse(String calendarEventId,
                 e.getColor(),
                 e.getStartAt(),
                 e.getEndAt(),
-                isCreateByMe);
+                isCreatedByMe);
     }
 }

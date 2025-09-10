@@ -6,9 +6,6 @@ import lombok.Getter;
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDateTime;
-import java.util.List;
-
-import static jakarta.persistence.CascadeType.*;
 
 @Entity
 @Table(name = "calendar")
@@ -38,10 +35,6 @@ public class Calendar {
     private LocalDateTime updatedAt;
 
     private LocalDateTime deletedAt;
-
-    @OneToMany(cascade = { PERSIST, REMOVE }, fetch = FetchType.EAGER)
-    @JoinColumn(name = "calendarId")
-    private List<CalendarCategory> categories;
 
     public static Calendar create(Long ownerId, String calendarName, CalendarAccessLevel accessLevel) {
         Calendar c = new Calendar();

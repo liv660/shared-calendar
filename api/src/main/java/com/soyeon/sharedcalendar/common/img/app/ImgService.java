@@ -3,6 +3,7 @@ package com.soyeon.sharedcalendar.common.img.app;
 import com.soyeon.sharedcalendar.common.exception.ErrorCode;
 import com.soyeon.sharedcalendar.common.img.dto.ImgUploadResponse;
 import com.soyeon.sharedcalendar.common.security.SecurityUtils;
+import com.soyeon.sharedcalendar.common.validator.ValidatorService;
 import com.soyeon.sharedcalendar.config.minio.MinioException;
 import com.soyeon.sharedcalendar.config.minio.MinioProperties;
 import io.minio.GetPresignedObjectUrlArgs;
@@ -26,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 public class ImgService {
     private final MinioClient minioClient;
     private final MinioProperties minioProperties;
+    private final ValidatorService validatorService;
 
     /**
      * MiniO에 upload
@@ -65,6 +67,7 @@ public class ImgService {
     public ImgUploadResponse getPresignedUrl(String contentType) {
         try {
             Long memberId = SecurityUtils.getCurrentMemberId();
+            validatorService.validateMember(memberId);
             String bucket = minioProperties.getBucket();
             String objectKey = ObjectKeyGenerator.buildObjectKey(memberId, contentType);
             String presignedUrl = minioClient.getPresignedObjectUrl(

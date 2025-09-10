@@ -25,7 +25,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.soyeon.sharedcalendar.calendar.domain.VisibilityType.*;
-import static com.soyeon.sharedcalendar.common.security.SecurityUtils.*;
+import static com.soyeon.sharedcalendar.common.security.SecurityUtils.getCurrentMemberId;
 
 @Slf4j
 @Service
@@ -48,7 +48,7 @@ public class CalendarEventService {
      * @return
      */
     public List<CalendarEvent> getEvents(Long calendarId, LocalDateTime from, LocalDateTime to) {
-        validatorService.validateCalendarAndMember(calendarId, getCurrentMemberId());
+        validatorService.validateCalendar(calendarId);
         return calendarEventRepository.findReadable(calendarId, getCurrentMemberId(), from, to);
     }
 
@@ -59,13 +59,10 @@ public class CalendarEventService {
      */
     @Transactional
     public void createEvent(Long calendarId, CalendarEventRequest request) {
-        log.info("[creatEvent] 시작일: {}", request.startAt());
-        log.info("[creatEvent] 종료일: {}", request.endAt());
-        Long memberId = getCurrentMemberId();
         // 1. 유효 체크
-        validatorService.validateCalendarAndMember(calendarId, memberId);
+        validatorService.validateCalendar(calendarId);
 
-        CalendarEvent event = CalendarEvent.create(calendarId, memberId, defaultEventColor, request);
+        CalendarEvent event = CalendarEvent.create(calendarId, getCurrentMemberId(), defaultEventColor, request);
         // 2. 카테고리 있으면 카테고리 색상 적용 없으면 기본 색상 적용
         if (request.categoryId() != null) {
             String color = getEventColorByCategory(request.categoryId());
@@ -96,20 +93,19 @@ public class CalendarEventService {
      */
     @Transactional
     public void deleteEvent(Long calendarId, Long eventId) {
-        Long memberId = getCurrentMemberId();
-        validatorService.validateCalendarAndMember(calendarId, memberId);
+        validatorService.validateCalendar(calendarId);
 
         CalendarEvent event = calendarEventRepository
                 .getCalendarEventByCalendarEventIdAndCalendarId(eventId, calendarId)
                 .orElseThrow(() -> new EventNotFound(calendarId, eventId));
-        if (!event.getCreatedBy().equals(memberId)) {
+        if (!event.getCreatedBy().equals(getCurrentMemberId())) {
             throw new EventUnauthorized(calendarId, eventId,"해당 일정을 생성한 사용자만 삭제할 수 있습니다.");
         }
         calendarEventRepository.delete(event);
     }
 
     /**
-     * 일정을 수정한다. (일정을 생성 또는 공유중인 사용자가 수정할 수 있음)
+     * 일정을 수정한다. (일정을 생성한 사람이 수정할 수 있음)
      * @param calendarId
      * @param eventId
      * @param request
@@ -189,8 +185,6 @@ public class CalendarEventService {
      */
     public CalendarEventDetailResponse getEvent(Long calendarId, Long eventId) {
         Long memberId = getCurrentMemberId();
-        validatorService.validateMember(memberId);
-
         CalendarEvent event = validatorService.validateEvent(calendarId, eventId);
         boolean isCreatedByMe = event.getCreatedBy().equals(memberId);
 

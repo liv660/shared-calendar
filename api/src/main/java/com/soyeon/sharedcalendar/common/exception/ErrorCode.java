@@ -25,7 +25,8 @@ public enum ErrorCode {
     EVENT_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "EVENT_UNAUTHORIZED"),
 
     //calendar category
-    CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "CATEGORY_NOT_FOUND");
+    CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "CATEGORY_NOT_FOUND"),
+    CALENDAR_CATEGORY_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "CALENDAR_CATEGORY_UNAUTHORIZED"),;
 
     public final HttpStatus status;
     public final String code;

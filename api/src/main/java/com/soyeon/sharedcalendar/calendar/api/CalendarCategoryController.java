@@ -28,4 +28,16 @@ public class CalendarCategoryController {
     public void addCategory(@PathVariable Long calendarId, @RequestBody CalendarCategoryRequest request) {
         calendarCategoryService.addCategory(calendarId, request);
     }
+
+    @Operation(summary = "카테고리 삭제", description = "카테고리를 삭제한다.")
+    @DeleteMapping("/categories/{categoryId}")
+    public void deleteCategory(@PathVariable Long calendarId, @PathVariable Long categoryId) {
+        calendarCategoryService.deleteCategory(calendarId, categoryId);
+    }
+
+    @Operation(summary = "카테고리 수정", description = "카테고리를 수정한다.")
+    @PatchMapping("/categories/{categoryId}")
+    public void updateCategory(@PathVariable Long calendarId, @RequestBody CalendarCategoryRequest request) {
+        calendarCategoryService.updateCategory(calendarId, request);
+    }
 }
