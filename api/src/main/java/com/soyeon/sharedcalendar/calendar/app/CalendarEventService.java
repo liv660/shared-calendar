@@ -7,14 +7,14 @@ import com.soyeon.sharedcalendar.calendar.domain.repository.CalendarEventReposit
 import com.soyeon.sharedcalendar.calendar.dto.request.CalendarEventRequest;
 import com.soyeon.sharedcalendar.calendar.dto.response.CalendarCategoriesResponse;
 import com.soyeon.sharedcalendar.calendar.dto.response.CalendarEventDetailResponse;
-import com.soyeon.sharedcalendar.calendar.exception.event.EventNotFound;
-import com.soyeon.sharedcalendar.calendar.exception.event.EventUnauthorized;
+import com.soyeon.sharedcalendar.calendar.exception.event.EventNotFoundException;
+import com.soyeon.sharedcalendar.calendar.exception.event.EventUnauthorizedException;
 import com.soyeon.sharedcalendar.common.img.app.ImgService;
 import com.soyeon.sharedcalendar.common.validator.ValidatorService;
 import com.soyeon.sharedcalendar.member.domain.Member;
 import com.soyeon.sharedcalendar.member.domain.repository.MemberRepository;
 import com.soyeon.sharedcalendar.member.dto.MemberDto;
-import com.soyeon.sharedcalendar.member.exception.MemberNotFound;
+import com.soyeon.sharedcalendar.member.exception.MemberNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -98,9 +98,9 @@ public class CalendarEventService {
 
         CalendarEvent event = calendarEventRepository
                 .getCalendarEventByCalendarEventIdAndCalendarId(eventId, calendarId)
-                .orElseThrow(() -> new EventNotFound(calendarId, eventId));
+                .orElseThrow(() -> new EventNotFoundException(calendarId, eventId));
         if (!event.getCreatedBy().equals(getCurrentMemberId())) {
-            throw new EventUnauthorized(calendarId, eventId,"해당 일정을 생성한 사용자만 삭제할 수 있습니다.");
+            throw new EventUnauthorizedException(calendarId, eventId,"해당 일정을 생성한 사용자만 삭제할 수 있습니다.");
         }
         calendarEventRepository.delete(event);
     }
@@ -116,10 +116,10 @@ public class CalendarEventService {
         Long memberId = getCurrentMemberId();
         CalendarEvent event = calendarEventRepository
                 .getCalendarEventByCalendarEventIdAndCalendarId(eventId, calendarId)
-                .orElseThrow(() -> new EventNotFound(calendarId, eventId));
+                .orElseThrow(() -> new EventNotFoundException(calendarId, eventId));
         if (event.getVisibility() == PUBLIC
             && !event.getCreatedBy().equals(memberId)) {
-            throw new EventUnauthorized(calendarId, eventId);
+            throw new EventUnauthorizedException(calendarId, eventId);
         }
 
         // 카테고리 변경에 따라 일정 색상(color) 수정
@@ -186,7 +186,7 @@ public class CalendarEventService {
      */
     public CalendarEventDetailResponse getEvent(Long calendarId, Long eventId) {
         Long memberId = getCurrentMemberId();
-        Member member = memberRepository.findById(memberId).orElseThrow(() -> new MemberNotFound(memberId));
+        Member member = memberRepository.findById(memberId).orElseThrow(() -> new MemberNotFoundException(memberId));
         CalendarEvent event = validatorService.validateEvent(calendarId, eventId);
         boolean isCreatedByMe = event.getCreatedBy().equals(memberId);
 

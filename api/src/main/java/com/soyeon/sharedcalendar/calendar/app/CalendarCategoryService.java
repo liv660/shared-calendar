@@ -5,7 +5,7 @@ import com.soyeon.sharedcalendar.calendar.domain.CalendarCategory;
 import com.soyeon.sharedcalendar.calendar.domain.repository.CalendarCategoryRepository;
 import com.soyeon.sharedcalendar.calendar.dto.request.CalendarCategoryRequest;
 import com.soyeon.sharedcalendar.calendar.dto.response.CalendarCategoriesResponse;
-import com.soyeon.sharedcalendar.calendar.exception.category.CalendarCategoryUnauthorized;
+import com.soyeon.sharedcalendar.calendar.exception.category.CalendarCategoryUnauthorizedException;
 import com.soyeon.sharedcalendar.common.security.SecurityUtils;
 import com.soyeon.sharedcalendar.common.validator.ValidatorService;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +49,7 @@ public class CalendarCategoryService {
         Long memberId = SecurityUtils.getCurrentMemberId();
 
         if (!c.getOwnerId().equals(memberId)) {
-            throw new CalendarCategoryUnauthorized(calendarId, memberId);
+            throw new CalendarCategoryUnauthorizedException(calendarId, memberId);
         }
 
         CalendarCategory cc = CalendarCategory.create(calendarId, request.categoryName(), request.categoryColor());
@@ -70,7 +70,7 @@ public class CalendarCategoryService {
         if (c.getOwnerId().equals(memberId)) {
             calendarCategoryRepository.deleteById(categoryId);
         }
-        throw new CalendarCategoryUnauthorized(calendarId, memberId);
+        throw new CalendarCategoryUnauthorizedException(calendarId, memberId);
     }
 
     /**

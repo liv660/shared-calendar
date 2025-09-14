@@ -5,7 +5,7 @@ import com.soyeon.sharedcalendar.calendar.domain.repository.CalendarRepository;
 import com.soyeon.sharedcalendar.calendar.dto.request.CalendarRequest;
 import com.soyeon.sharedcalendar.calendar.dto.response.CalendarListResponse;
 import com.soyeon.sharedcalendar.calendar.dto.response.CalendarResponse;
-import com.soyeon.sharedcalendar.calendar.exception.calendar.CalendarUnauthorized;
+import com.soyeon.sharedcalendar.calendar.exception.calendar.CalendarUnauthorizedException;
 import com.soyeon.sharedcalendar.common.img.app.ImgService;
 import com.soyeon.sharedcalendar.common.security.SecurityUtils;
 import com.soyeon.sharedcalendar.common.validator.ValidatorService;
@@ -85,7 +85,7 @@ public class CalendarService {
     public void deleteCalendar(Long calendarId) {
         Calendar calendar = validatorService.validateCalendar(calendarId);
         if (!isOwner(calendar)) {
-            throw new CalendarUnauthorized(calendar.getCalendarId());
+            throw new CalendarUnauthorizedException(calendar.getCalendarId());
         }
         calendarRepository.deleteById(calendarId);
     }

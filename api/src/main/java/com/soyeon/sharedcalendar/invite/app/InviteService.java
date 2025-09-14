@@ -9,7 +9,8 @@ import com.soyeon.sharedcalendar.invite.domain.InviteeStatusHistory;
 import com.soyeon.sharedcalendar.invite.domain.repository.InviteeRepository;
 import com.soyeon.sharedcalendar.invite.domain.repository.InviteeStatusHistoryRepository;
 import com.soyeon.sharedcalendar.invite.dto.InviteeAddRequest;
-import com.soyeon.sharedcalendar.invite.exception.InviteeNotFound;
+import com.soyeon.sharedcalendar.invite.exception.InviteeHistoryNotFoundException;
+import com.soyeon.sharedcalendar.invite.exception.InviteeNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,7 +57,7 @@ public class InviteService {
 
         // 초대 이력 update
         InviteeStatusHistory history = inviteeStatusHistoryRepository.findTopByInviteeIdOrderByCreatedAtDesc(invitee.getInviteeId())
-                .orElseThrow(InviteeNotFound::new);
+                .orElseThrow(InviteeNotFoundException::new);
         InviteeStatusHistory newHistory = InviteeStatusHistory.create(
                 invitee.getInviteeId(), history.getToStatus(), invitee.getStatus(), null);
         inviteeStatusHistoryRepository.save(newHistory);
@@ -80,12 +81,12 @@ public class InviteService {
     @Transactional
     public Long markInviteAsJoined(String email, Long memberId) {
         Invitee invitee = inviteeRepository.findByEmail(email)
-                .orElseThrow(InviteeNotFound::new);
+                .orElseThrow(InviteeNotFoundException::new);
         Invitee joined = invitee.join(memberId);
         inviteeRepository.save(joined);
 
         InviteeStatusHistory history = inviteeStatusHistoryRepository.findTopByInviteeIdOrderByCreatedAtDesc(invitee.getInviteeId())
-                .orElseThrow(InviteeNotFound::new);
+                .orElseThrow(InviteeHistoryNotFoundException::new);
         InviteeStatusHistory newHistory = InviteeStatusHistory.create(
                 invitee.getInviteeId(), history.getToStatus(), invitee.getStatus(), memberId);
         inviteeStatusHistoryRepository.save(newHistory);

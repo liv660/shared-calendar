@@ -3,7 +3,7 @@ package com.soyeon.sharedcalendar.member.app;
 import com.soyeon.sharedcalendar.calendar.domain.repository.CalendarMemberRepository;
 import com.soyeon.sharedcalendar.common.security.SecurityUtils;
 import com.soyeon.sharedcalendar.member.dto.MeResponse;
-import com.soyeon.sharedcalendar.member.exception.MemberNotFound;
+import com.soyeon.sharedcalendar.member.exception.MemberNotFoundException;
 import com.soyeon.sharedcalendar.security.oauth2.AppOAuth2User;
 import com.soyeon.sharedcalendar.member.domain.Member;
 import com.soyeon.sharedcalendar.member.domain.repository.MemberRepository;
@@ -73,7 +73,7 @@ public class MemberService {
         Long memberId = SecurityUtils.getCurrentMemberId();
         Member m = memberRepository
                 .findById(memberId)
-                .orElseThrow(() -> new MemberNotFound(memberId));
+                .orElseThrow(() -> new MemberNotFoundException(memberId));
         boolean hasCalendar = calendarMemberRepository.existsByMemberId(memberId);
         return new MeResponse(m.getName(),
                 m.getEmail(),

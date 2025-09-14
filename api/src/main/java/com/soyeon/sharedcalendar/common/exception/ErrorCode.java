@@ -29,7 +29,8 @@ public enum ErrorCode {
     CALENDAR_CATEGORY_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "CALENDAR_CATEGORY_UNAUTHORIZED"),
 
     //invite
-    InviteeNotFound(HttpStatus.NOT_FOUND, "InviteeNotFound");
+    InviteeNotFound(HttpStatus.NOT_FOUND, "InviteeNotFound"),
+    InviteeHistoryNotFound(HttpStatus.NOT_FOUND, "InviteeHistoryNotFound");
     public final HttpStatus status;
     public final String code;
 

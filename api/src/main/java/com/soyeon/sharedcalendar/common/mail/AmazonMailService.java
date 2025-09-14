@@ -9,7 +9,7 @@ import com.soyeon.sharedcalendar.invite.dto.InviteeAddRequest;
 import com.soyeon.sharedcalendar.invite.app.InviteService;
 import com.soyeon.sharedcalendar.member.domain.Member;
 import com.soyeon.sharedcalendar.member.domain.repository.MemberRepository;
-import com.soyeon.sharedcalendar.member.exception.MemberNotFound;
+import com.soyeon.sharedcalendar.member.exception.MemberNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,7 +44,7 @@ public class AmazonMailService {
      * @param calendar
      */
     public void sendEmail(InviteRequest inviteRequest, Calendar calendar) {
-        Member owner = memberRepository.findById(calendar.getOwnerId()).orElseThrow(() -> new MemberNotFound(calendar.getOwnerId()));
+        Member owner = memberRepository.findById(calendar.getOwnerId()).orElseThrow(() -> new MemberNotFoundException(calendar.getOwnerId()));
         String subject = "공유캘린더: " + calendar.getCalendarName() + "에서 당신을 초대합니다.";
         LocalDateTime expiresAt = LocalDateTime.now().plusHours(24);
         String inviteToken = UUID.randomUUID().toString();
