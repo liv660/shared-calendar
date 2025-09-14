@@ -37,7 +37,7 @@ public class CalendarController {
         Calendar calendar = calendarService.createCalendar(request);
 
         // 캘린더 사용자로 등록
-        calendarMemberService.addMember(calendar.getCalendarId(), MemberRole.ADMIN, CalendarAccessLevel.FULL_ACCESS);
+        calendarMemberService.initMember(calendar.getCalendarId());
 
         // 이미지 메타 저장
         if (request.imgMeta() != null) {

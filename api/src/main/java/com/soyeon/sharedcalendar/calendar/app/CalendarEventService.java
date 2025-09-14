@@ -14,6 +14,7 @@ import com.soyeon.sharedcalendar.common.validator.ValidatorService;
 import com.soyeon.sharedcalendar.member.domain.Member;
 import com.soyeon.sharedcalendar.member.domain.repository.MemberRepository;
 import com.soyeon.sharedcalendar.member.dto.MemberDto;
+import com.soyeon.sharedcalendar.member.exception.MemberNotFound;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -185,6 +186,7 @@ public class CalendarEventService {
      */
     public CalendarEventDetailResponse getEvent(Long calendarId, Long eventId) {
         Long memberId = getCurrentMemberId();
+        Member member = memberRepository.findById(memberId).orElseThrow(() -> new MemberNotFound(memberId));
         CalendarEvent event = validatorService.validateEvent(calendarId, eventId);
         boolean isCreatedByMe = event.getCreatedBy().equals(memberId);
 
@@ -201,6 +203,6 @@ public class CalendarEventService {
                     return MemberDto.create(ev.getMember().getName(), ev.getMember().getEmail(), presignedUrl);
                 })
                 .collect(Collectors.toSet());
-        return CalendarEventDetailResponse.from(event, categories, visibleMembers, isCreatedByMe);
+        return CalendarEventDetailResponse.from(event, categories, visibleMembers, member.getName(), isCreatedByMe);
     }
 }

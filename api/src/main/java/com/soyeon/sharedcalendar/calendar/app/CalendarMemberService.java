@@ -1,5 +1,6 @@
 package com.soyeon.sharedcalendar.calendar.app;
 
+import com.soyeon.sharedcalendar.calendar.domain.Calendar;
 import com.soyeon.sharedcalendar.calendar.domain.CalendarAccessLevel;
 import com.soyeon.sharedcalendar.calendar.domain.CalendarMember;
 import com.soyeon.sharedcalendar.calendar.domain.MemberRole;
@@ -28,16 +29,32 @@ public class CalendarMemberService {
     private final MemberRepository memberRepository;
     private final ImgService imgService;
 
+
     /**
-     * 캘린더의 사용자로 등록한다.
+     * 캘린더로 초대받은 사용자를 등록한다.
      * @param calendarId
-     * @param role ADMIN / USER
-     * @param accessLevel READ_ONLY, READ_WRITE, FULL_ACCESS
+     * @param memberId
+     * @param accessLevel
+     */
+    public void addMember(Long calendarId, Long memberId, CalendarAccessLevel accessLevel) {
+        Calendar c = validatorService.validateCalendar(calendarId);
+        CalendarMember cm = CalendarMember.create(calendarId, memberId, MemberRole.USER, accessLevel);
+        calendarMemberRepository.save(cm);
+
+    }
+
+    /**
+     * 캘린더 생성자를 캘린더의 사용자로 등록한다.
+     * @param calendarId
      */
     @Transactional
-    public void addMember(Long calendarId, MemberRole role, CalendarAccessLevel accessLevel) {
+    public void initMember(Long calendarId) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        CalendarMember member = CalendarMember.create(calendarId, memberId, role, accessLevel);
+        CalendarMember member = CalendarMember.create(
+                calendarId,
+                memberId,
+                MemberRole.ADMIN,
+                CalendarAccessLevel.FULL_ACCESS);
         calendarMemberRepository.save(member);
     }
 

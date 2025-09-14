@@ -20,7 +20,7 @@ import java.util.List;
 
 import static com.soyeon.sharedcalendar.calendar.domain.CalendarAccessLevel.*;
 import static com.soyeon.sharedcalendar.calendar.utils.CalendarUtils.*;
-import static com.soyeon.sharedcalendar.common.security.SecurityUtils.*;
+import static com.soyeon.sharedcalendar.common.security.SecurityUtils.getCurrentMemberId;
 
 @Slf4j
 @Service
@@ -84,9 +84,10 @@ public class CalendarService {
     @Transactional
     public void deleteCalendar(Long calendarId) {
         Calendar calendar = validatorService.validateCalendar(calendarId);
-        if (isOwner(calendar)) {
-            calendarRepository.deleteById(calendarId);
+        if (!isOwner(calendar)) {
+            throw new CalendarUnauthorized(calendar.getCalendarId());
         }
+        calendarRepository.deleteById(calendarId);
     }
 
     /**
@@ -148,10 +149,6 @@ public class CalendarService {
      * @param calendar
      */
     private boolean isOwner(Calendar calendar) {
-        Long memberId = getCurrentMemberId();
-        if (!calendar.getOwnerId().equals(memberId)) {
-            throw new CalendarUnauthorized(calendar.getCalendarId());
-        }
-        return true;
+        return calendar.getOwnerId().equals(getCurrentMemberId());
     }
 }

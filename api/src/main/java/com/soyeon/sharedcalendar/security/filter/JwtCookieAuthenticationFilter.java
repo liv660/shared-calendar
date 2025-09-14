@@ -29,7 +29,8 @@ public class JwtCookieAuthenticationFilter extends OncePerRequestFilter {
             parser.parse("/v3/api-docs/**"),
             parser.parse("/swagger-ui/**"),
             parser.parse("/swagger-ui.html"),
-            parser.parse("/temp/**")
+            parser.parse("/temp/**"),
+            parser.parse("/invite/accept/**")
     );
 
     public JwtCookieAuthenticationFilter(JwtDecoder decoder) {

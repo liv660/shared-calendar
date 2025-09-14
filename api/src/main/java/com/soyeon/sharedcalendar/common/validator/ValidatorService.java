@@ -8,6 +8,9 @@ import com.soyeon.sharedcalendar.calendar.domain.repository.CalendarRepository;
 import com.soyeon.sharedcalendar.calendar.exception.calendar.CalendarNotFound;
 import com.soyeon.sharedcalendar.calendar.exception.category.CategoryNotFound;
 import com.soyeon.sharedcalendar.calendar.exception.event.EventNotFound;
+import com.soyeon.sharedcalendar.invite.domain.Invitee;
+import com.soyeon.sharedcalendar.invite.domain.repository.InviteeRepository;
+import com.soyeon.sharedcalendar.invite.exception.InviteeNotFound;
 import com.soyeon.sharedcalendar.member.domain.Member;
 import com.soyeon.sharedcalendar.member.domain.repository.MemberRepository;
 import com.soyeon.sharedcalendar.member.exception.MemberNotFound;
@@ -21,6 +24,7 @@ public class ValidatorService {
     private final CalendarRepository calendarRepository;
     private final CalendarEventRepository calendarEventRepository;
     private final CalendarCategoryRepository calendarCategoryRepository;
+    private final InviteeRepository inviteeRepository;
 
     public Member validateMember(Long memberId) {
         return memberRepository.findById(memberId).orElseThrow(() -> new MemberNotFound(memberId));
@@ -45,5 +49,10 @@ public class ValidatorService {
     public void validateCategory(Long calendarId, Long categoryId) {
         calendarCategoryRepository.findByCategoryIdAndCalendarId(categoryId, calendarId)
                 .orElseThrow(() -> new CategoryNotFound(calendarId, categoryId));
+    }
+
+    public Invitee validateInviteToken(String inviteToken) {
+        return inviteeRepository.findByInviteToken(inviteToken)
+                .orElseThrow(InviteeNotFound::new);
     }
 }
