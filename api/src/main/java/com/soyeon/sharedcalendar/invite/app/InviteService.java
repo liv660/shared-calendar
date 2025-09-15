@@ -11,6 +11,7 @@ import com.soyeon.sharedcalendar.invite.domain.repository.InviteeStatusHistoryRe
 import com.soyeon.sharedcalendar.invite.dto.InviteeAddRequest;
 import com.soyeon.sharedcalendar.invite.exception.InviteeHistoryNotFoundException;
 import com.soyeon.sharedcalendar.invite.exception.InviteeNotFoundException;
+import com.soyeon.sharedcalendar.member.domain.Member;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -74,25 +75,24 @@ public class InviteService {
 
     /**
      * 회원 가입이 완료되어 초대 상태를 가입으로 처리한다.
-     * @param email
-     * @param memberId
+     * @param member
      * @return calendarId
      */
     @Transactional
-    public Long markInviteAsJoined(String email, Long memberId) {
-        Invitee invitee = inviteeRepository.findByEmail(email)
+    public Long markInviteAsJoined(Member member) {
+        Invitee invitee = inviteeRepository.findByEmail(member.getEmail())
                 .orElseThrow(InviteeNotFoundException::new);
-        Invitee joined = invitee.join(memberId);
+        Invitee joined = invitee.join(member.getMemberId());
         inviteeRepository.save(joined);
 
         InviteeStatusHistory history = inviteeStatusHistoryRepository.findTopByInviteeIdOrderByCreatedAtDesc(invitee.getInviteeId())
                 .orElseThrow(InviteeHistoryNotFoundException::new);
         InviteeStatusHistory newHistory = InviteeStatusHistory.create(
-                invitee.getInviteeId(), history.getToStatus(), invitee.getStatus(), memberId);
+                invitee.getInviteeId(), history.getToStatus(), invitee.getStatus(), member.getMemberId());
         inviteeStatusHistoryRepository.save(newHistory);
 
         // calendar member로 등록한다
-        calendarMemberService.addMember(invitee.getCalendarId(), memberId, invitee.getAccessLevel());
+        calendarMemberService.addMember(invitee.getCalendarId(), member, invitee.getAccessLevel());
         return invitee.getCalendarId();
     }
 

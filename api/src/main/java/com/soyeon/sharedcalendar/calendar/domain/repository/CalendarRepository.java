@@ -35,7 +35,7 @@ public interface CalendarRepository extends JpaRepository<Calendar, Long> {
         from Calendar c
             join CalendarMember cm
                 on c.calendarId = cm.calendarId
-        where cm.memberId = :memberId
+        where cm.member.memberId = :memberId
     """)
     List<Calendar> findAllCalendarsByMemberId(Long memberId);
 }

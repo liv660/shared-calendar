@@ -4,23 +4,19 @@ import com.soyeon.sharedcalendar.calendar.app.CalendarMemberService;
 import com.soyeon.sharedcalendar.calendar.app.CalendarProfileImgService;
 import com.soyeon.sharedcalendar.calendar.app.CalendarService;
 import com.soyeon.sharedcalendar.calendar.domain.Calendar;
-import com.soyeon.sharedcalendar.calendar.domain.CalendarAccessLevel;
 import com.soyeon.sharedcalendar.calendar.domain.CalendarImgMeta;
-import com.soyeon.sharedcalendar.calendar.domain.MemberRole;
 import com.soyeon.sharedcalendar.calendar.dto.request.CalendarRequest;
 import com.soyeon.sharedcalendar.calendar.dto.response.CalendarListResponse;
 import com.soyeon.sharedcalendar.calendar.dto.response.CalendarResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Slf4j
 @RestController
 @RequestMapping("/calendars")
 @RequiredArgsConstructor

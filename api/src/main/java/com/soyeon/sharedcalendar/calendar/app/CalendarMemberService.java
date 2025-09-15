@@ -33,12 +33,12 @@ public class CalendarMemberService {
     /**
      * 캘린더로 초대받은 사용자를 등록한다.
      * @param calendarId
-     * @param memberId
+     * @param member
      * @param accessLevel
      */
-    public void addMember(Long calendarId, Long memberId, CalendarAccessLevel accessLevel) {
+    public void addMember(Long calendarId, Member member, CalendarAccessLevel accessLevel) {
         Calendar c = validatorService.validateCalendar(calendarId);
-        CalendarMember cm = CalendarMember.create(calendarId, memberId, MemberRole.USER, accessLevel);
+        CalendarMember cm = CalendarMember.create(calendarId, member, MemberRole.USER, accessLevel);
         calendarMemberRepository.save(cm);
 
     }
@@ -50,12 +50,13 @@ public class CalendarMemberService {
     @Transactional
     public void initMember(Long calendarId) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        CalendarMember member = CalendarMember.create(
+        Member member = validatorService.validateMember(memberId);
+        CalendarMember cm = CalendarMember.create(
                 calendarId,
-                memberId,
+                member,
                 MemberRole.ADMIN,
                 CalendarAccessLevel.FULL_ACCESS);
-        calendarMemberRepository.save(member);
+        calendarMemberRepository.save(cm);
     }
 
     /**
@@ -65,8 +66,9 @@ public class CalendarMemberService {
      * @return
      */
     public CalendarAccessLevel getAccessLevel(Long calendarId, Long memberId) {
-        validatorService.validateCalendarAndMember(calendarId, memberId);
-        CalendarMember cm = calendarMemberRepository.findCalendarMemberByCalendarIdAndMemberId(calendarId, memberId);
+        validatorService.validateCalendar(calendarId);
+        Member member = validatorService.validateMember(memberId);
+        CalendarMember cm = calendarMemberRepository.findCalendarMemberByCalendarIdAndMember(calendarId, member);
         return cm.getAccessLevel();
     }
 
@@ -76,18 +78,53 @@ public class CalendarMemberService {
      * @return
      */
     public List<CalendarMemberResponse> getMembers(Long calendarId) {
-        validatorService.validateCalendar(calendarId);
-        List<Long> memberIds = calendarMemberRepository.findMemberIdsByCalendarId(calendarId)
-                .stream()
-                .map(CalendarMember::getMemberId)
-                .toList();
-        List<Member> members = memberRepository.findAllById(memberIds);
-        List<CalendarMemberResponse> profiles = new ArrayList<>();
+        Calendar calendar = validatorService.validateCalendar(calendarId);
+        List<CalendarMember> list = calendarMemberRepository.findAllMemberByCalendarId(calendarId);
 
-        for (Member m : members) {
-            String presignedUrl = imgService.getPresignedUrlByObjectKey(m.getProfileImgKey());
-            profiles.add(CalendarMemberResponse.create(m.getName(), m.getEmail(), presignedUrl));
-        }
-        return profiles;
+        List<CalendarMemberResponse> members = new ArrayList<>();
+        list.forEach(cm -> {
+            String presignedUrl = imgService.getPresignedUrlByObjectKey(cm.getMember().getProfileImgKey());
+            members.add(CalendarMemberResponse.create(cm.getMember().getMemberId(),
+                    cm.getMember().getName(),
+                    cm.getMember().getEmail(),
+                    presignedUrl,
+                    cm.getAccessLevel(),
+                    calendar.getOwnerId().equals(cm.getMember().getMemberId())));
+
+        });
+        return members;
+    }
+
+    /**
+     * 사용자의 권한을 변경한다.
+     * @param calendarId
+     * @param memberId
+     * @param accessLevel 새로 적용할 권한
+     */
+    @Transactional
+    public void changeAccessLevel(Long calendarId, Long memberId, CalendarAccessLevel accessLevel) {
+        Calendar calendar = validatorService.validateCalendar(calendarId);
+        Long contextMemberId = SecurityUtils.getCurrentMemberId();
+
+        validatorService.isOwner(calendar, contextMemberId);
+        Member member = validatorService.validateMember(memberId);
+
+        CalendarMember cm = calendarMemberRepository.findCalendarMemberByCalendarIdAndMember(calendarId, member);
+        cm.changeAccessLevel(accessLevel);
+        calendarMemberRepository.save(cm);
+    }
+
+    /**
+     * 캘린더 내에서 사용자를 삭제한다.
+     * @param calendarId
+     * @param memberId
+     */
+    @Transactional
+    public void deleteMember(Long calendarId, Long memberId) {
+        Calendar calendar = validatorService.validateCalendar(calendarId);
+        Member member = validatorService.validateMember(memberId);
+        Long contextMemberId = SecurityUtils.getCurrentMemberId();
+        validatorService.isOwner(calendar, contextMemberId);
+        calendarMemberRepository.deleteByCalendarIdAndMember(calendarId, member);
     }
 }

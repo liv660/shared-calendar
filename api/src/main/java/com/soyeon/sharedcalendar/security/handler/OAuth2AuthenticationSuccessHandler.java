@@ -52,7 +52,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             // 초대 받은 이력 있는 경우 초대 상태 업데이트
             boolean exists = inviteService.existsInviteFor(member.getEmail());
             if (exists) {
-                Long calendarId = inviteService.markInviteAsJoined(member.getEmail(), member.getMemberId());
+                Long calendarId = inviteService.markInviteAsJoined(member);
                 redirectUrl = (frontBaseUrl + "/calendars/" + calendarId);
             }
         }

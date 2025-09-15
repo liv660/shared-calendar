@@ -74,7 +74,7 @@ public class MemberService {
         Member m = memberRepository
                 .findById(memberId)
                 .orElseThrow(() -> new MemberNotFoundException(memberId));
-        boolean hasCalendar = calendarMemberRepository.existsByMemberId(memberId);
+        boolean hasCalendar = calendarMemberRepository.existsByMember(m);
         return new MeResponse(m.getName(),
                 m.getEmail(),
                 getUuidFromProfileImgKey(m.getProfileImgKey()),

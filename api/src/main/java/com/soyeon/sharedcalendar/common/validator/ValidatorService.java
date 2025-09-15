@@ -6,6 +6,7 @@ import com.soyeon.sharedcalendar.calendar.domain.repository.CalendarCategoryRepo
 import com.soyeon.sharedcalendar.calendar.domain.repository.CalendarEventRepository;
 import com.soyeon.sharedcalendar.calendar.domain.repository.CalendarRepository;
 import com.soyeon.sharedcalendar.calendar.exception.calendar.CalendarNotFoundException;
+import com.soyeon.sharedcalendar.calendar.exception.calendar.CalendarUnauthorizedException;
 import com.soyeon.sharedcalendar.calendar.exception.category.CategoryNotFoundException;
 import com.soyeon.sharedcalendar.calendar.exception.event.EventNotFoundException;
 import com.soyeon.sharedcalendar.invite.domain.Invitee;
@@ -54,5 +55,13 @@ public class ValidatorService {
     public Invitee validateInviteToken(String inviteToken) {
         return inviteeRepository.findByInviteToken(inviteToken)
                 .orElseThrow(InviteeNotFoundException::new);
+    }
+
+    public boolean isOwner(Calendar calendar, Long memberId) {
+        boolean isOwner = calendar.getOwnerId().equals(memberId);
+        if (!isOwner) {
+            throw new CalendarUnauthorizedException(calendar.getCalendarId());
+        }
+        return true;
     }
 }

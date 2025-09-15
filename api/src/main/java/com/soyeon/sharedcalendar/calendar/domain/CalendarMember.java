@@ -1,6 +1,7 @@
 package com.soyeon.sharedcalendar.calendar.domain;
 
 import com.soyeon.sharedcalendar.common.id.SnowflakeId;
+import com.soyeon.sharedcalendar.member.domain.Member;
 import jakarta.persistence.*;
 import lombok.Getter;
 
@@ -15,7 +16,7 @@ public class CalendarMember {
     private Long calendarMemberId;
 
     private Long calendarId; //Calendar.calendarId
-    private Long memberId; //Member.memberId
+//    private Long memberId; //Member.memberId
 
     @Enumerated(EnumType.STRING)
     private MemberRole roleCode;
@@ -28,12 +29,20 @@ public class CalendarMember {
 
     private LocalDateTime deletedAt;
 
-    public static CalendarMember create(Long calendarId, Long memberId, MemberRole roleCode, CalendarAccessLevel accessLevel) {
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id")
+    private Member member;
+
+    public static CalendarMember create(Long calendarId, Member member, MemberRole roleCode, CalendarAccessLevel accessLevel) {
         CalendarMember cm = new CalendarMember();
         cm.calendarId = calendarId;
-        cm.memberId = memberId;
+        cm.member = member;
         cm.roleCode = roleCode;
         cm.accessLevel = accessLevel;
         return cm;
+    }
+
+    public void changeAccessLevel(CalendarAccessLevel accessLevel) {
+        this.accessLevel = accessLevel;
     }
 }
