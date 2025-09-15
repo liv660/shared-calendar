@@ -45,4 +45,8 @@ public class CalendarMember {
     public void changeAccessLevel(CalendarAccessLevel accessLevel) {
         this.accessLevel = accessLevel;
     }
+
+    public void changeMemberRole(MemberRole role) {
+        this.roleCode = role;
+    }
 }

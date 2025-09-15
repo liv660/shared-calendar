@@ -9,6 +9,9 @@ import com.soyeon.sharedcalendar.calendar.exception.calendar.CalendarUnauthorize
 import com.soyeon.sharedcalendar.common.img.app.ImgService;
 import com.soyeon.sharedcalendar.common.security.SecurityUtils;
 import com.soyeon.sharedcalendar.common.validator.ValidatorService;
+import com.soyeon.sharedcalendar.member.domain.Member;
+import com.soyeon.sharedcalendar.member.domain.repository.MemberRepository;
+import com.soyeon.sharedcalendar.member.exception.MemberNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +36,7 @@ public class CalendarService {
     private final CalendarProfileImgService calendarProfileImgService;
     private final ImgService imgService;
     private final CalendarMemberService calendarMemberService;
+    private final MemberRepository memberRepository;
 
     /**
      * 새 캘린더를 생성한다
@@ -150,5 +154,28 @@ public class CalendarService {
      */
     private boolean isOwner(Calendar calendar) {
         return calendar.getOwnerId().equals(getCurrentMemberId());
+    }
+
+    /**
+     * 캘린더 관리자를 변경한다
+     * @param calendarId
+     * @param memberId 새 관리자
+     */
+    @Transactional
+    public void changeOwner(Long calendarId, Long memberId) {
+        Calendar calendar = validatorService.validateCalendar(calendarId);
+        Member newOwner = validatorService.validateMember(memberId);
+
+        Long contextMemberId = SecurityUtils.getCurrentMemberId();
+        validatorService.isOwner(calendar, contextMemberId);
+
+        // 권한 위임 + role: ADMIN, accessLevel: FULL_ACCESS로 변경
+        calendar.changeOwnerId(memberId);
+        calendarRepository.save(calendar);
+        calendarMemberService.changeRoleAndAccessLevel(calendarId, newOwner, MemberRole.ADMIN, FULL_ACCESS);
+
+        // 기존 관리자는 role:User, calendar.accessLevel로 권한 변경
+        Member originOwner = memberRepository.findById(contextMemberId).orElseThrow(() -> new MemberNotFoundException(memberId));
+        calendarMemberService.changeRoleAndAccessLevel(calendarId, originOwner, MemberRole.USER, calendar.getDefaultAccessLevel());
     }
 }

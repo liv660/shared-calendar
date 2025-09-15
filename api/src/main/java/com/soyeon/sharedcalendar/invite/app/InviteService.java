@@ -12,6 +12,7 @@ import com.soyeon.sharedcalendar.invite.dto.InviteeAddRequest;
 import com.soyeon.sharedcalendar.invite.exception.InviteeHistoryNotFoundException;
 import com.soyeon.sharedcalendar.invite.exception.InviteeNotFoundException;
 import com.soyeon.sharedcalendar.member.domain.Member;
+import com.soyeon.sharedcalendar.member.domain.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,7 @@ public class InviteService {
     private final CalendarMemberService calendarMemberService;
     private final InviteeRepository inviteeRepository;
     private final InviteeStatusHistoryRepository inviteeStatusHistoryRepository;
+    private final MemberRepository memberRepository;
 
     /**
      * 초대 내역을 저장한다.
@@ -51,16 +53,29 @@ public class InviteService {
      */
     @Transactional
     public void accept(String inviteToken) {
-        // 초대 상태 update
+        // 1. 초대 상태 update
         Invitee invitee = validatorService.validateInviteToken(inviteToken);
-        invitee.changeStatus(InviteStatus.ACCEPTED);
-        inviteeRepository.save(invitee);
+        Member byEmail = memberRepository.findByEmail(invitee.getEmail()).orElse(null);
 
-        // 초대 이력 update
+        if (byEmail == null) {
+            // 1-1. 회원이 아닌 경우
+            invitee.changeStatus(InviteStatus.ACCEPTED);
+            inviteeRepository.save(invitee);
+        } else {
+            // 1-2. 이미 회원가입 되어있는 경우
+            invitee.changeStatus(InviteStatus.ACCEPTED_JOINED);
+            inviteeRepository.save(invitee);
+
+            // CalenderMember 등록
+            calendarMemberService.addMember(invitee.getCalendarId(), byEmail, invitee.getAccessLevel());
+        }
+
+        // 2. 초대 이력 update
         InviteeStatusHistory history = inviteeStatusHistoryRepository.findTopByInviteeIdOrderByCreatedAtDesc(invitee.getInviteeId())
                 .orElseThrow(InviteeNotFoundException::new);
+        Long memberId = byEmail == null ? null : byEmail.getMemberId();
         InviteeStatusHistory newHistory = InviteeStatusHistory.create(
-                invitee.getInviteeId(), history.getToStatus(), invitee.getStatus(), null);
+                invitee.getInviteeId(), history.getToStatus(), invitee.getStatus(), memberId);
         inviteeStatusHistoryRepository.save(newHistory);
     }
 

@@ -21,4 +21,6 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
             where m.memberId = :memberId
     """)
     void updateRefreshToken(Long memberId, String refreshToken);
+
+    Optional<Member> findByEmail(String email);
 }

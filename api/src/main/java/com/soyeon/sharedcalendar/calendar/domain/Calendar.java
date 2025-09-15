@@ -55,4 +55,8 @@ public class Calendar {
     public void changeProfileImg(String profileImgKey) {
         this.profileImgKey = profileImgKey;
     }
+
+    public void changeOwnerId(Long ownerId) {
+        this.ownerId = ownerId;
+    }
 }

@@ -70,4 +70,10 @@ public class CalendarController {
                                                         @RequestParam(required = false) LocalDateTime to) {
         return calendarService.getCalendar(calendarId, from, to);
     }
+
+    @Operation(summary = "캘린더 관리 권한 위임", description = "캘린더 관리자를 변경한다.")
+    @PatchMapping("/{calendarId}/owner")
+    public void changeOwner(@PathVariable Long calendarId, @RequestBody Long memberId) {
+        calendarService.changeOwner(calendarId, memberId);
+    }
 }

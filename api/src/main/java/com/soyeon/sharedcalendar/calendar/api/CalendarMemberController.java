@@ -25,8 +25,8 @@ public class CalendarMemberController {
 
     @Operation(summary = "사용자 권한 변경", description = "사용자의 권한을 변경한다.")
     @PatchMapping("/members/{memberId}/access-level")
-    public void changeAccessLevel(@PathVariable Long calendarId, @PathVariable Long memberId, @RequestParam CalendarAccessLevel accessLevel) {
-        calendarMemberService.changeAccessLevel(calendarId, memberId, accessLevel);
+    public void changeAccessLevel(@PathVariable Long calendarId, @PathVariable Long memberId, @RequestBody CalendarAccessLevel accessLevel) {
+        calendarMemberService.changeAccessLevelByOwner(calendarId, memberId, accessLevel);
     }
 
     @Operation(summary = "사용자 삭제", description = "캘린더에서 사용자를 삭제한다.")

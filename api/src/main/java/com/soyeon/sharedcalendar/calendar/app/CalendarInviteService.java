@@ -39,7 +39,7 @@ public class CalendarInviteService {
         validatorService.validateCalendar(calendarId);
         return inviteeRepository.findByCalendarId(calendarId)
                 .stream()
-                .filter(i -> !(i.getStatus().equals(InviteStatus.JOINED)))
+                .filter(i -> (!(i.getStatus().equals(InviteStatus.JOINED)) && !(i.getStatus().equals(InviteStatus.ACCEPTED_JOINED))))
                 .map(InvitesResponse::from)
                 .toList();
     }

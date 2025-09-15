@@ -102,7 +102,7 @@ public class CalendarMemberService {
      * @param accessLevel 새로 적용할 권한
      */
     @Transactional
-    public void changeAccessLevel(Long calendarId, Long memberId, CalendarAccessLevel accessLevel) {
+    public void changeAccessLevelByOwner(Long calendarId, Long memberId, CalendarAccessLevel accessLevel) {
         Calendar calendar = validatorService.validateCalendar(calendarId);
         Long contextMemberId = SecurityUtils.getCurrentMemberId();
 
@@ -111,6 +111,20 @@ public class CalendarMemberService {
 
         CalendarMember cm = calendarMemberRepository.findCalendarMemberByCalendarIdAndMember(calendarId, member);
         cm.changeAccessLevel(accessLevel);
+        calendarMemberRepository.save(cm);
+    }
+
+    /**
+     * 사용자의 권한을 변경한다. (관리 위임 후 권한 변경)
+     * @param calendarId
+     * @param member
+     * @param accessLevel 새로 적용할 권한
+     */
+    @Transactional
+    public void changeRoleAndAccessLevel(Long calendarId, Member member, MemberRole role,  CalendarAccessLevel accessLevel) {
+        CalendarMember cm = calendarMemberRepository.findCalendarMemberByCalendarIdAndMember(calendarId, member);
+        cm.changeAccessLevel(accessLevel);
+        cm.changeMemberRole(role);
         calendarMemberRepository.save(cm);
     }
 
