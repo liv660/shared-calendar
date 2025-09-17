@@ -1,13 +1,12 @@
 package com.soyeon.sharedcalendar.member.api;
 
 import com.soyeon.sharedcalendar.member.app.MemberService;
+import com.soyeon.sharedcalendar.member.dto.MeRequest;
 import com.soyeon.sharedcalendar.member.dto.MeResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/member")
@@ -21,4 +20,11 @@ public class MemberController {
     public MeResponse me() {
         return memberService.getCurrentMemberSummary();
     }
+
+    @Operation(summary = "내 정보 수정", description = "기본 정보를 수정한다.")
+    @PatchMapping("/me")
+    public void updateMe(@RequestBody MeRequest request) {
+        memberService.updateMe(request);
+    }
+
 }

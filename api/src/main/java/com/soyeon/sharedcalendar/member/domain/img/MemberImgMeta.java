@@ -35,14 +35,28 @@ public class MemberImgMeta {
     @Column(insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    public static MemberImgMeta create(Long memberId, String objectKey, String contentType, byte[] bytes, String contentHash, SourceType sourceType) {
+    public static MemberImgMeta createForOAuth(Long memberId, String objectKey, String contentType, byte[] bytes, String contentHash) {
         MemberImgMeta meta = new MemberImgMeta();
         meta.ownerId = memberId;
         meta.objectKey = objectKey;
         meta.contentType = contentType;
         meta.bytes = bytes.length;
         meta.contentHash = contentHash;
-        meta.sourceType = sourceType;
+        meta.sourceType = SourceType.OAUTH;
+        return meta;
+    }
+
+    public static MemberImgMeta createForUpload(Long memberId, String objectKey, String contentType, int bytes, int width, int height, String contentHash, String originalFilename) {
+        MemberImgMeta meta = new MemberImgMeta();
+        meta.ownerId = memberId;
+        meta.objectKey = objectKey;
+        meta.contentType = contentType;
+        meta.bytes = bytes;
+        meta.width = width;
+        meta.height = height;
+        meta.contentHash = contentHash;
+        meta.originalFilename = originalFilename;
+        meta.sourceType = SourceType.UPLOAD;
         return meta;
     }
 }

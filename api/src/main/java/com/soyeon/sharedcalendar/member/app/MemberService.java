@@ -1,7 +1,12 @@
 package com.soyeon.sharedcalendar.member.app;
 
 import com.soyeon.sharedcalendar.calendar.domain.repository.CalendarMemberRepository;
+import com.soyeon.sharedcalendar.common.img.app.ImgService;
 import com.soyeon.sharedcalendar.common.security.SecurityUtils;
+import com.soyeon.sharedcalendar.common.validator.ValidatorService;
+import com.soyeon.sharedcalendar.member.domain.img.MemberImgMeta;
+import com.soyeon.sharedcalendar.member.domain.repository.MemberImgMetaRepository;
+import com.soyeon.sharedcalendar.member.dto.MeRequest;
 import com.soyeon.sharedcalendar.member.dto.MeResponse;
 import com.soyeon.sharedcalendar.member.exception.MemberNotFoundException;
 import com.soyeon.sharedcalendar.security.oauth2.AppOAuth2User;
@@ -19,6 +24,10 @@ import org.springframework.stereotype.Service;
 public class MemberService {
     private final MemberRepository memberRepository;
     private final CalendarMemberRepository calendarMemberRepository;
+    private final ValidatorService validatorService;
+    private final ImgService imgService;
+    private final MemberProfileImgService memberProfileImgService;
+    private final MemberImgMetaRepository memberImgMetaRepository;
 
     /**
      * 회원을 조회한다.
@@ -59,36 +68,45 @@ public class MemberService {
      * 회원의 프로필 사진을 업데이트한다.
      * @param member MemberImgMeta profileImg
      */
-    public void updateProfileImage(Member member, String objectKey) {
+    public void updateProfileImageForOAuth(Member member, String objectKey) {
         member.updateProfileImage(objectKey);
         memberRepository.save(member);
     }
 
     /**
      * 회원 정보를 조회한다.
-     * memberId, email, name, hasCalendar
+     * email, name, imgUrl, hasCalendar
      * @return
      */
     public MeResponse getCurrentMemberSummary() {
-        Long memberId = SecurityUtils.getCurrentMemberId();
-        Member m = memberRepository
-                .findById(memberId)
-                .orElseThrow(() -> new MemberNotFoundException(memberId));
-        boolean hasCalendar = calendarMemberRepository.existsByMember(m);
-        return new MeResponse(m.getName(),
-                m.getEmail(),
-                getUuidFromProfileImgKey(m.getProfileImgKey()),
+        Member me = validatorService.validateMember(SecurityUtils.getCurrentMemberId());
+        boolean hasCalendar = calendarMemberRepository.existsByMember(me);
+        return new MeResponse(me.getName(),
+                me.getEmail(),
+                imgService.getPresignedUrlByObjectKey(me.getProfileImgKey()),
                 hasCalendar);
     }
 
-    private String getUuidFromProfileImgKey(String profileImgKey) {
-        if (profileImgKey == null || profileImgKey.isEmpty()) {
-            return null;
+    /**
+     * 회원 정보를 수정한다.
+     * @param request
+     * @return
+     */
+    @Transactional
+    public void updateMe(MeRequest request) {
+        Member member = validatorService.validateMember(SecurityUtils.getCurrentMemberId());
+        // 이름 수정
+        if (request.name() != null && !request.name().isEmpty()) {
+            member.changeName(request.name());
         }
 
-        int lastIndexOf = profileImgKey.lastIndexOf("/");
-        return profileImgKey.substring(lastIndexOf + 1);
+        // 프로필 사진 수정
+        if (request.imgMeta() != null) {
+            MemberImgMeta meta = memberProfileImgService.createMetaForUpload(request.imgMeta());
+            memberImgMetaRepository.save(meta);
+
+            member.updateProfileImage(meta.getObjectKey());
+            memberRepository.save(member);
+        }
     }
-
-
 }

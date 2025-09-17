@@ -3,7 +3,9 @@ package com.soyeon.sharedcalendar.member.app;
 import com.soyeon.sharedcalendar.common.crypto.HashingService;
 import com.soyeon.sharedcalendar.common.img.app.ImgService;
 import com.soyeon.sharedcalendar.common.img.app.ObjectKeyGenerator;
+import com.soyeon.sharedcalendar.common.img.dto.ImgRequest;
 import com.soyeon.sharedcalendar.common.img.dto.UploadResult;
+import com.soyeon.sharedcalendar.common.security.SecurityUtils;
 import com.soyeon.sharedcalendar.member.domain.img.MemberImgMeta;
 import com.soyeon.sharedcalendar.member.domain.img.SourceType;
 import com.soyeon.sharedcalendar.member.domain.repository.MemberImgMetaRepository;
@@ -73,12 +75,16 @@ public class MemberProfileImgService {
      * @return
      */
     public MemberImgMeta createMetaForOAuthMember(UploadResult result, Long memberId) {
-        return MemberImgMeta.create(memberId,
+        return MemberImgMeta.createForOAuth(memberId,
                 result.objectKey(),
                 result.contentType(),
                 result.bytes(),
-                HashingService.hash(result.bytes()),
-                SourceType.OAUTH);
+                HashingService.hash(result.bytes()));
+    }
+
+    public MemberImgMeta createMetaForUpload(ImgRequest request) {
+        return MemberImgMeta.createForUpload(SecurityUtils.getCurrentMemberId(),
+                request.objectKey(), request.contentType(), request.bytes(), request.width(), request.height(), request.contentHash(), request.originalFilename());
     }
 
     /**

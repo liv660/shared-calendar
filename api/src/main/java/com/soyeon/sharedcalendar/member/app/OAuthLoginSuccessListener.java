@@ -27,7 +27,7 @@ public class OAuthLoginSuccessListener {
                     memberProfileImgService.save(meta);
 
                     // 이미지 update
-                    memberService.updateProfileImage(event.member(), meta.getObjectKey());
+                    memberService.updateProfileImageForOAuth(event.member(), meta.getObjectKey());
                 })
                 .doOnError(error -> log.info("profile image save failed: {}", error.getMessage()))
                 .subscribe();

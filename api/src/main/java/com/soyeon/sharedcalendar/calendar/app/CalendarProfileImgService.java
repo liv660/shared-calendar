@@ -2,7 +2,7 @@ package com.soyeon.sharedcalendar.calendar.app;
 
 import com.soyeon.sharedcalendar.calendar.domain.CalendarImgMeta;
 import com.soyeon.sharedcalendar.calendar.domain.repository.CalendarImgMetaRepository;
-import com.soyeon.sharedcalendar.calendar.dto.request.CalendarImgRequest;
+import com.soyeon.sharedcalendar.common.img.dto.ImgRequest;
 import com.soyeon.sharedcalendar.common.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +20,7 @@ public class CalendarProfileImgService {
      * @param req
      * @return
      */
-    public CalendarImgMeta createMetaForUpload(Long calendarId, CalendarImgRequest req) {
+    public CalendarImgMeta createMetaForUpload(Long calendarId, ImgRequest req) {
         Long memberId = SecurityUtils.getCurrentMemberId();
         return CalendarImgMeta.create(memberId, calendarId, req.objectKey(),
                 req.contentType(), req.bytes(), req.width(), req.height(), req.contentHash(), req.originalFilename());

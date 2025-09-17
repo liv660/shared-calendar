@@ -62,4 +62,7 @@ public class Member {
     public void updateProfileImage(String objectKey) {
         profileImgKey = objectKey;
     }
+    public void changeName(String newName) {
+        name = newName;
+    }
 }
