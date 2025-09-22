@@ -8,7 +8,6 @@ import com.soyeon.sharedcalendar.member.domain.img.MemberImgMeta;
 import com.soyeon.sharedcalendar.member.domain.repository.MemberImgMetaRepository;
 import com.soyeon.sharedcalendar.member.dto.MeRequest;
 import com.soyeon.sharedcalendar.member.dto.MeResponse;
-import com.soyeon.sharedcalendar.member.exception.MemberNotFoundException;
 import com.soyeon.sharedcalendar.security.oauth2.AppOAuth2User;
 import com.soyeon.sharedcalendar.member.domain.Member;
 import com.soyeon.sharedcalendar.member.domain.repository.MemberRepository;
@@ -81,7 +80,8 @@ public class MemberService {
     public MeResponse getCurrentMemberSummary() {
         Member me = validatorService.validateMember(SecurityUtils.getCurrentMemberId());
         boolean hasCalendar = calendarMemberRepository.existsByMember(me);
-        return new MeResponse(me.getName(),
+        return new MeResponse(String.valueOf(me.getMemberId()),
+                me.getName(),
                 me.getEmail(),
                 imgService.getPresignedUrlByObjectKey(me.getProfileImgKey()),
                 hasCalendar);

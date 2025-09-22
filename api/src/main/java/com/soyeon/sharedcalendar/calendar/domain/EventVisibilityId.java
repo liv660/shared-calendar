@@ -1,11 +1,15 @@
 package com.soyeon.sharedcalendar.calendar.domain;
 
 import jakarta.persistence.Embeddable;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
 import java.io.Serializable;
 import java.util.Objects;
 
 @Embeddable
+@Getter
+@EqualsAndHashCode
 public class EventVisibilityId implements Serializable {
     private Long calendarEventId;
     private Long memberId;

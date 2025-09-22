@@ -16,6 +16,7 @@ public class EventVisibility {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "calendar_event_id")
     private CalendarEvent event;
+
     @MapsId(value = "memberId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
@@ -23,6 +24,7 @@ public class EventVisibility {
 
     public static EventVisibility create(CalendarEvent calendarEvent, Member member) {
         EventVisibility ev = new EventVisibility();
+        ev.id = new EventVisibilityId(calendarEvent.getCalendarEventId(), member.getMemberId());
         ev.event = calendarEvent;
         ev.member = member;
         return ev;

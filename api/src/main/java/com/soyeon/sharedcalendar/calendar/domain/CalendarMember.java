@@ -16,7 +16,6 @@ public class CalendarMember {
     private Long calendarMemberId;
 
     private Long calendarId; //Calendar.calendarId
-//    private Long memberId; //Member.memberId
 
     @Enumerated(EnumType.STRING)
     private MemberRole roleCode;

@@ -1,6 +1,7 @@
 package com.soyeon.sharedcalendar.calendar.domain.repository;
 
 import com.soyeon.sharedcalendar.calendar.domain.CalendarEvent;
+import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
+@DynamicUpdate
 public interface CalendarEventRepository extends JpaRepository<CalendarEvent, Long> {
 
     @Query("""
@@ -40,6 +42,7 @@ public interface CalendarEventRepository extends JpaRepository<CalendarEvent, Lo
                 ce.startAt = :#{#e.startAt},
                 ce.endAt = :#{#e.endAt},
                 ce.updatedBy = :memberId
+            where ce.calendarEventId = :#{#e.calendarEventId}
     """)
     void update(Long memberId, @Param("e") CalendarEvent event);
 

@@ -42,11 +42,6 @@ public class ValidatorService {
                 .orElseThrow(() -> new EventNotFoundException(calendarId, eventId));
     }
 
-    public void validateCalendarAndMember(Long calendarId, Long memberId) {
-        validateCalendar(calendarId);
-        validateMember(memberId);
-    }
-
     public void validateCategory(Long calendarId, Long categoryId) {
         calendarCategoryRepository.findByCategoryIdAndCalendarId(categoryId, calendarId)
                 .orElseThrow(() -> new CategoryNotFoundException(calendarId, categoryId));

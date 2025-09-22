@@ -26,7 +26,7 @@ public class CalendarEvent {
 
     private Long calendarId;
 
-    @Column(length = 128, updatable = false)
+    @Column(length = 128)
     private String title;
 
     private String contents;
@@ -81,7 +81,9 @@ public class CalendarEvent {
     public void changeVisibilityToPublic() {
         visibility = VisibilityType.PUBLIC;
     }
-
+    public void changeVisibilityToPrivate() {
+        visibility = VisibilityType.PRIVATE;
+    }
     public void allowAll() {
         visibilityMembers.clear();
     }
@@ -101,7 +103,16 @@ public class CalendarEvent {
         return allDay ? endAt.toLocalDate().atTime(LocalTime.of(23, 59, 59)) : endAt;
     }
 
+    public void changeTitle(String title) {
+        this.title = title;
+    }
+    public void changeContents(String contents) {
+        this.contents = contents;
+    }
     public void changeColor(String categoryColor) {
         color = categoryColor;
+    }
+    public void changeUpdateBy(Long memberId) {
+        this.updatedBy = memberId;
     }
 }

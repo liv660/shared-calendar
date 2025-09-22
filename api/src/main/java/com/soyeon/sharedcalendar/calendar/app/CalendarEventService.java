@@ -2,6 +2,7 @@ package com.soyeon.sharedcalendar.calendar.app;
 
 import com.soyeon.sharedcalendar.calendar.domain.CalendarCategory;
 import com.soyeon.sharedcalendar.calendar.domain.CalendarEvent;
+import com.soyeon.sharedcalendar.calendar.domain.VisibilityType;
 import com.soyeon.sharedcalendar.calendar.domain.repository.CalendarCategoryRepository;
 import com.soyeon.sharedcalendar.calendar.domain.repository.CalendarEventRepository;
 import com.soyeon.sharedcalendar.calendar.dto.request.CalendarEventRequest;
@@ -71,7 +72,8 @@ public class CalendarEventService {
         }
 
         // 3. 공개 범위
-        switch (request.visibility()) {
+        VisibilityType type = request.visibleMemberIds() == null ? PUBLIC : PRIVATE;
+        switch (type) {
             case PUBLIC:
                 event.changeVisibilityToPublic();
                 event.allowAll();
@@ -81,6 +83,9 @@ public class CalendarEventService {
                         .stream()
                         .map((String id) -> memberRepository.getReferenceById(Long.valueOf(id)))
                         .collect(Collectors.toSet());
+                // 일정 생성자도 추가
+                Member creator = validatorService.validateMember(getCurrentMemberId());
+                visibleMembers.add(creator);
                 event.allowOnly(visibleMembers);
                 break;
         }
@@ -114,15 +119,25 @@ public class CalendarEventService {
     @Transactional
     public void updateEvent(Long calendarId, Long eventId, CalendarEventRequest request) {
         Long memberId = getCurrentMemberId();
-        CalendarEvent event = calendarEventRepository
-                .getCalendarEventByCalendarEventIdAndCalendarId(eventId, calendarId)
-                .orElseThrow(() -> new EventNotFoundException(calendarId, eventId));
-        if (event.getVisibility() == PUBLIC
-            && !event.getCreatedBy().equals(memberId)) {
+        CalendarEvent event = validatorService.validateEvent(calendarId, eventId);
+
+        // (1) 권한 check
+        if (!event.getCreatedBy().equals(memberId)) {
             throw new EventUnauthorizedException(calendarId, eventId);
         }
 
-        // 카테고리 변경에 따라 일정 색상(color) 수정
+        // (2) title 변경 check
+        if (!event.getTitle().equals(request.title())) {
+            event.changeTitle(request.title());
+        }
+
+        // (3) contents 변경 check
+        String originContents = event.getContents();
+        if (request.contents() != null) {
+            event.changeContents(request.contents());
+        }
+
+        // (4) 카테고리 변경에 따라 일정 색상(color) 수정
         String color = event.getColor();
 
         // case 1: 카테고리 정보를 삭제하는 경우
@@ -140,30 +155,32 @@ public class CalendarEventService {
             }
             // case 2-2: 원래 카테고리를 다른 카테고리로 수정하는 경우
             if ( originCategory != null
-                    && !(originCategory.equals(newCategory))) {
+                    && !(originCategory.equals(newCategory)) ) {
                 color = getEventColorByCategory(request.categoryId());
             }
         }
+        event.changeColor(color);
 
-        CalendarEvent updated = CalendarEvent.create(calendarId, memberId, color, request);
-
-        // 공개 범위 변경 시 수정
+        // (5) 공개 범위 변경 시 수정
         // case 1: PRIVATE -> PUBLIC
-        boolean toPublic = request.visibility() == PUBLIC;
+        boolean toPublic = request.visibility() == PUBLIC || request.visibleMemberIds() == null;
         if (event.getVisibility() == PRIVATE && toPublic) {
-            updated.changeVisibilityToPublic();
-            updated.allowAll();
+            event.changeVisibilityToPublic();
+            event.allowAll();
         }
         // case 2: PUBLIC -> PRIVATE
         // case 3: PRIVATE -> PRIVATE (멤버 추가 또는 삭제)
         if (!toPublic) {
+            Member creator = validatorService.validateMember(memberId);
             Set<Member> visibleMembers = request.visibleMemberIds()
                     .stream()
                     .map((String id) -> memberRepository.getReferenceById(Long.valueOf(id)))
                     .collect(Collectors.toSet());
-            updated.allowOnly(visibleMembers);
+            visibleMembers.add(creator);
+            event.changeVisibilityToPrivate();
+            event.allowOnly(visibleMembers);
         }
-        calendarEventRepository.update(memberId, updated);
+        event.changeUpdateBy(memberId);
     }
 
     /**
@@ -200,7 +217,7 @@ public class CalendarEventService {
                 .stream()
                 .map(ev -> {
                     String presignedUrl = imgService.getPresignedUrlByObjectKey(ev.getMember().getProfileImgKey());
-                    return MemberDto.create(ev.getMember().getName(), ev.getMember().getEmail(), presignedUrl);
+                    return MemberDto.create(ev.getMember().getMemberId(), ev.getMember().getName(), ev.getMember().getEmail(), presignedUrl);
                 })
                 .collect(Collectors.toSet());
         return CalendarEventDetailResponse.from(event, categories, visibleMembers, member.getName(), isCreatedByMe);
