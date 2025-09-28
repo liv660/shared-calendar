@@ -1,10 +1,12 @@
 services:
   mysql-dev:
     image: mysql:8.0
-    container_name: mysql-dev
+    container_name: shared-calendar-db
     command: ["--default-authentication-plugin=mysql_native_password",
               "--collation-server=utf8mb4_0900_ai_ci",
-              "--skip-character-set-client-handshake"
+              "--skip-character-set-client-handshake",
+              "--default-time-zone=+09:00",
+
     ]
     ports:
       - '127.0.0.1:${MYSQL_PORT}:3306'
@@ -13,16 +15,42 @@ services:
       MYSQL_DATABASE: '${MYSQL_DATABASE}'
       MYSQL_USER: '${MYSQL_USER}'
       MYSQL_PASSWORD: '${MYSQL_PASSWORD}'
+      TZ: Asia/Seoul
     volumes:
 #      - mysql_data:/var/lib/mysql
       - ./init-sql-dev:/docker-entrypoint-initdb.d
     networks:
       - dev-network
 
+  redis:
+    image: redis:7-alpine
+    container_name: shared-calendar-redis
+    environment:
+      REDIS_PASSWORD: "${REDIS_PASSWORD:-dev*2025}"
+    command: >
+      sh -c 'exec redis-server
+      --requirepass "$${REDIS_PASSWORD}"
+      --appendonly yes
+      --maxmemory-policy allkeys-lru'
+    ports:
+      - "16379:6379"
+#    volumes:
+#      - redis_data:/data
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: shared_calendar_minio
+      MINIO_ROOT_PASSWORD: minio_dev*2025
+    ports: ["19000:9000","19001:9001"]
+#    volumes: ["minio_data:/data"]
 networks:
   dev-network:
     driver: bridge
 
-#volumes:
-#  mysql_data:
+volumes:
+  mysql_data:
+  redis_data:
+  minio_data:
 

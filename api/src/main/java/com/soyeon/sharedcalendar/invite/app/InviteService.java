@@ -1,0 +1,126 @@
+package com.soyeon.sharedcalendar.invite.app;
+
+import com.soyeon.sharedcalendar.calendar.app.CalendarMemberService;
+import com.soyeon.sharedcalendar.calendar.domain.CalendarAccessLevel;
+import com.soyeon.sharedcalendar.common.validator.ValidatorService;
+import com.soyeon.sharedcalendar.invite.domain.InviteStatus;
+import com.soyeon.sharedcalendar.invite.domain.Invitee;
+import com.soyeon.sharedcalendar.invite.domain.InviteeStatusHistory;
+import com.soyeon.sharedcalendar.invite.domain.repository.InviteeRepository;
+import com.soyeon.sharedcalendar.invite.domain.repository.InviteeStatusHistoryRepository;
+import com.soyeon.sharedcalendar.invite.dto.InviteeAddRequest;
+import com.soyeon.sharedcalendar.invite.exception.InviteeHistoryNotFoundException;
+import com.soyeon.sharedcalendar.invite.exception.InviteeNotFoundException;
+import com.soyeon.sharedcalendar.member.domain.Member;
+import com.soyeon.sharedcalendar.member.domain.repository.MemberRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@Transactional(readOnly = true)
+@RequiredArgsConstructor
+public class InviteService {
+    private final ValidatorService validatorService;
+    private final CalendarMemberService calendarMemberService;
+    private final InviteeRepository inviteeRepository;
+    private final InviteeStatusHistoryRepository inviteeStatusHistoryRepository;
+    private final MemberRepository memberRepository;
+
+    /**
+     * 초대 내역을 저장한다.
+     * @param request
+     */
+    @Transactional
+    public Invitee addInvitee(InviteeAddRequest request) {
+        Invitee invitee = Invitee.init(request);
+        return inviteeRepository.save(invitee);
+    }
+
+    /**
+     * 초대 내역 히스토리를 저장한다.
+     * @param inviteId
+     */
+    @Transactional
+    public void addInviteeStatusHistory(Long inviteId) {
+        InviteeStatusHistory history = InviteeStatusHistory.init(inviteId);
+        inviteeStatusHistoryRepository.save(history);
+    }
+
+    /**
+     * 초대 상태를 업데이트한다. (WAIT -> ACCEPTED)
+     * @param inviteToken
+     */
+    @Transactional
+    public void accept(String inviteToken) {
+        // 1. 초대 상태 update
+        Invitee invitee = validatorService.validateInviteToken(inviteToken);
+        Member byEmail = memberRepository.findByEmail(invitee.getEmail()).orElse(null);
+
+        if (byEmail == null) {
+            // 1-1. 회원이 아닌 경우
+            invitee.changeStatus(InviteStatus.ACCEPTED);
+            inviteeRepository.save(invitee);
+        } else {
+            // 1-2. 이미 회원가입 되어있는 경우
+            invitee.changeStatus(InviteStatus.ACCEPTED_JOINED);
+            inviteeRepository.save(invitee);
+
+            // CalenderMember 등록
+            calendarMemberService.addMember(invitee.getCalendarId(), byEmail, invitee.getAccessLevel());
+        }
+
+        // 2. 초대 이력 update
+        InviteeStatusHistory history = inviteeStatusHistoryRepository.findTopByInviteeIdOrderByCreatedAtDesc(invitee.getInviteeId())
+                .orElseThrow(InviteeNotFoundException::new);
+        Long memberId = byEmail == null ? null : byEmail.getMemberId();
+        InviteeStatusHistory newHistory = InviteeStatusHistory.create(
+                invitee.getInviteeId(), history.getToStatus(), invitee.getStatus(), memberId);
+        inviteeStatusHistoryRepository.save(newHistory);
+    }
+
+    /**
+     * 초대 받은 이력이 있는지 조회한다.
+     * @param email
+     * @return
+     */
+    public boolean existsInviteFor(String email) {
+        return inviteeRepository.existsByEmail(email);
+    }
+
+    /**
+     * 회원 가입이 완료되어 초대 상태를 가입으로 처리한다.
+     * @param member
+     * @return calendarId
+     */
+    @Transactional
+    public Long markInviteAsJoined(Member member) {
+        Invitee invitee = inviteeRepository.findByEmail(member.getEmail())
+                .orElseThrow(InviteeNotFoundException::new);
+        Invitee joined = invitee.join(member.getMemberId());
+        inviteeRepository.save(joined);
+
+        InviteeStatusHistory history = inviteeStatusHistoryRepository.findTopByInviteeIdOrderByCreatedAtDesc(invitee.getInviteeId())
+                .orElseThrow(InviteeHistoryNotFoundException::new);
+        InviteeStatusHistory newHistory = InviteeStatusHistory.create(
+                invitee.getInviteeId(), history.getToStatus(), invitee.getStatus(), member.getMemberId());
+        inviteeStatusHistoryRepository.save(newHistory);
+
+        // calendar member로 등록한다
+        calendarMemberService.addMember(invitee.getCalendarId(), member, invitee.getAccessLevel());
+        return invitee.getCalendarId();
+    }
+
+    /**
+     * 재발송인 경우 resendCount, inviteToken, accessLevel, lastSentAt, expiresAt을 업데이트한다.
+     * @param invited
+     * @param inviteToken
+     */
+    @Transactional
+    public void resendInvitee(Invitee invited, String inviteToken, CalendarAccessLevel accessLevel) {
+        Invitee resend = invited.resend(inviteToken, accessLevel);
+        inviteeRepository.save(resend);
+    }
+
+
+}
