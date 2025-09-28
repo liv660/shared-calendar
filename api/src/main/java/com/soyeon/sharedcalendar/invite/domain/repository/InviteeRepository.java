@@ -20,4 +20,6 @@ public interface InviteeRepository extends JpaRepository<Invitee, Long> {
     List<Invitee> findByCalendarId(Long calendarId);
 
     void deleteByCalendarIdAndEmail(Long calendarId, String email);
+
+    Invitee findByAcceptMemberId(Long memberId);
 }

@@ -7,7 +7,6 @@ import com.soyeon.sharedcalendar.common.img.dto.ImgRequest;
 import com.soyeon.sharedcalendar.common.img.dto.UploadResult;
 import com.soyeon.sharedcalendar.common.security.SecurityUtils;
 import com.soyeon.sharedcalendar.member.domain.img.MemberImgMeta;
-import com.soyeon.sharedcalendar.member.domain.img.SourceType;
 import com.soyeon.sharedcalendar.member.domain.repository.MemberImgMetaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +63,6 @@ public class MemberProfileImgService {
                        return res.bodyToMono(String.class)
                                .defaultIfEmpty("")
                                .flatMap(body -> Mono.error(new IllegalArgumentException("Download Failed: " + res.statusCode() + " " + body)));
-
                    }
                });
     }
