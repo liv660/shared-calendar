@@ -9,6 +9,8 @@ import com.soyeon.sharedcalendar.calendar.dto.response.CalendarMemberResponse;
 import com.soyeon.sharedcalendar.common.img.app.ImgService;
 import com.soyeon.sharedcalendar.common.security.SecurityUtils;
 import com.soyeon.sharedcalendar.common.validator.ValidatorService;
+import com.soyeon.sharedcalendar.invite.domain.Invitee;
+import com.soyeon.sharedcalendar.invite.domain.repository.InviteeRepository;
 import com.soyeon.sharedcalendar.member.domain.Member;
 import com.soyeon.sharedcalendar.member.domain.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,8 +28,8 @@ import java.util.List;
 public class CalendarMemberService {
     private final ValidatorService validatorService;
     private final CalendarMemberRepository calendarMemberRepository;
-    private final MemberRepository memberRepository;
     private final ImgService imgService;
+    private final InviteeRepository inviteeRepository;
 
 
     /**
@@ -140,5 +142,11 @@ public class CalendarMemberService {
         Long contextMemberId = SecurityUtils.getCurrentMemberId();
         validatorService.isOwner(calendar, contextMemberId);
         calendarMemberRepository.deleteByCalendarIdAndMember(calendarId, member);
+
+        // 초대 이력도 삭제
+        Invitee invitee = inviteeRepository.findByAcceptMemberId(memberId);
+        if (invitee != null) {
+            inviteeRepository.delete(invitee);
+        }
     }
 }
